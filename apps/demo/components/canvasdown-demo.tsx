@@ -146,7 +146,11 @@ function CanvasdownDemoInner({
       {/* Left: DSL/Patch/API/Data Editor */}
       <div className="w-[40%] h-full border-r border-border flex flex-col">
         <div className="flex flex-col h-full">
-          <Tabs value={mode} onValueChange={v => setMode(v as EditorMode)}>
+          <Tabs
+            value={mode}
+            onValueChange={v => setMode(v as EditorMode)}
+            className="flex flex-col h-full"
+          >
             <div className="border-b border-border bg-card px-4 py-2 flex items-center justify-between">
               <TabsList className="h-auto">
                 <TabsTrigger value="dsl" className="text-xs">
@@ -169,29 +173,39 @@ function CanvasdownDemoInner({
             </div>
 
             {/* Editor Content */}
-            <div className="flex-1 overflow-hidden">
-              <TabsContent value="dsl" className="h-full m-0">
-                <DSLEditor
-                  dsl={dsl}
-                  onDslChange={onDslChange}
-                  error={parseError}
-                />
-              </TabsContent>
-              <TabsContent value="patch" className="h-full m-0">
-                <PatchEditor onApply={handlePatchApply} error={patchError} />
-              </TabsContent>
-              <TabsContent value="api" className="h-full m-0">
-                <APIDSLWriter onDSLGenerated={onAPIDSLGenerated} />
-              </TabsContent>
-              <TabsContent value="data" className="h-full m-0">
-                <DataViewer
-                  nodes={rawResult?.nodes || []}
-                  edges={rawResult?.edges || []}
-                  metadata={rawResult?.metadata || {}}
-                  parseError={parseError}
-                />
-              </TabsContent>
-            </div>
+            <TabsContent
+              value="dsl"
+              className="flex-1 m-0 flex flex-col overflow-hidden data-[state=inactive]:hidden"
+            >
+              <DSLEditor
+                dsl={dsl}
+                onDslChange={onDslChange}
+                error={parseError}
+              />
+            </TabsContent>
+            <TabsContent
+              value="patch"
+              className="flex-1 m-0 flex flex-col overflow-hidden data-[state=inactive]:hidden"
+            >
+              <PatchEditor onApply={handlePatchApply} error={patchError} />
+            </TabsContent>
+            <TabsContent
+              value="api"
+              className="flex-1 m-0 flex flex-col overflow-hidden data-[state=inactive]:hidden"
+            >
+              <APIDSLWriter onDSLGenerated={onAPIDSLGenerated} />
+            </TabsContent>
+            <TabsContent
+              value="data"
+              className="flex-1 m-0 flex flex-col overflow-hidden data-[state=inactive]:hidden"
+            >
+              <DataViewer
+                nodes={rawResult?.nodes || []}
+                edges={rawResult?.edges || []}
+                metadata={rawResult?.metadata || {}}
+                parseError={parseError}
+              />
+            </TabsContent>
           </Tabs>
         </div>
       </div>

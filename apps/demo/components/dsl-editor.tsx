@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { editor } from 'monaco-editor';
 import { Alert, AlertDescription } from '@/components/ui/alert';
