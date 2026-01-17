@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+# Run lint-staged via pnpm
+# pnpm automatically sets up the correct PATH including node
+pnpm exec lint-staged

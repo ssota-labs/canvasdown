@@ -1,0 +1,227 @@
+name: Canary Release
+
+on:
+  # dev 브랜치에 PR이 merge될 때마다 canary 릴리스 생성
+  pull_request:
+    branches: [dev]
+    types: [opened, synchronize, closed]
+
+  # 또는 수동 트리거
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Build number (optional, auto-incremented if not provided)'
+        required: false
+        type: string
+
+jobs:
+  canary-release:
+    # github-actions bot PR은 스킵
+    # skip-canary 라벨은 첫 step에서 API로 확인
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event.pull_request.merged == true &&
+      github.event.pull_request.user.login != 'github-actions[bot]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check skip-canary label
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "✅ Manual trigger - proceeding"
+            echo "proceed=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # PR 번호 확인
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "⚠️ No PR number found"
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "🔍 Checking PR #$PR_NUMBER for skip-canary label..."
+
+          # GitHub event context에서 라벨 가져오기
+          EVENT_LABELS='${{ toJSON(github.event.pull_request.labels) }}'
+          LABELS=$(echo "$EVENT_LABELS" | jq -r '.[].name' 2>/dev/null | tr '\n' ',' || echo "")
+
+          # skip-canary 라벨이 있는지 확인
+          if [ -n "$LABELS" ] && echo "$LABELS" | grep -qiE "skip-canary|no-release"; then
+            echo "⏭️ SKIPPING: Found skip-canary label"
+            echo "proceed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "✅ No skip label found - proceeding with canary release"
+          echo "proceed=true" >> $GITHUB_OUTPUT
+
+      - name: Checkout repository
+        if: steps.check.outputs.proceed == 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: dev
+          fetch-tags: true
+
+      - name: Setup pnpm
+        if: steps.check.outputs.proceed == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
+      - name: Setup Node.js
+        if: steps.check.outputs.proceed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        if: steps.check.outputs.proceed == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        if: steps.check.outputs.proceed == 'true'
+        run: pnpm build
+
+      - name: Calculate canary version
+        if: steps.check.outputs.proceed == 'true'
+        id: version
+        run: |
+          # 원격 태그 정보 가져오기
+          git fetch --tags --force
+
+          # 날짜 기반 버전 (YYYY.MM.DD-canary.BUILD)
+          DATE=$(date +%Y.%m.%d)
+
+          # 빌드 번호 계산
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ inputs.build_number }}" ]; then
+            BUILD_NUMBER="${{ inputs.build_number }}"
+          else
+            # 오늘 날짜의 canary 태그 개수 세기
+            TODAY_TAGS=$(git tag -l "v${DATE}-canary.*" | wc -l | tr -d ' ')
+            BUILD_NUMBER=$((TODAY_TAGS + 1))
+          fi
+
+          # 3자리로 포맷팅 (001, 002, ...)
+          BUILD_NUMBER=$(printf "%03d" $BUILD_NUMBER)
+
+          CANARY_VERSION="${DATE}-canary.${BUILD_NUMBER}"
+
+          echo "canary_version=$CANARY_VERSION" >> $GITHUB_OUTPUT
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+          echo "📦 Canary version: $CANARY_VERSION"
+
+      - name: Publish canary to npm
+        if: steps.check.outputs.proceed == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.canary_version }}"
+
+          # 각 패키지의 버전을 임시로 설정하고 배포
+          cd packages/core
+          npm version "$VERSION" --no-git-tag-version
+          npm publish --tag canary --access public
+
+          cd ../adapter/react-flow
+          npm version "$VERSION" --no-git-tag-version
+          npm publish --tag canary --access public
+
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Generate release notes
+        if: steps.check.outputs.proceed == 'true'
+        id: notes
+        run: |
+          # 최신 태그 이후의 커밋들 추출
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$LATEST_TAG" ]; then
+            COMMITS=$(git log --oneline --no-merges -10)
+          else
+            COMMITS=$(git log ${LATEST_TAG}..HEAD --oneline --no-merges -10)
+          fi
+
+          # Release notes 생성
+          cat > RELEASE_NOTES.md << EOF
+          ## 🐤 Canary Release: ${{ steps.version.outputs.canary_version }}
+
+          This is a pre-release build for testing purposes.
+
+          ### Recent Changes
+          $(echo "$COMMITS" | sed 's/^/- /')
+
+          ### ⚠️ Warning
+          This is a canary release. It may contain bugs or incomplete features.
+          Use at your own risk.
+
+          ### 📝 How to Install
+          \`\`\`bash
+          npm install @canvasdown/core@${{ steps.version.outputs.canary_version }}
+          npm install @canvasdown/react-flow@${{ steps.version.outputs.canary_version }}
+          \`\`\`
+
+          ### 📝 How to Test
+          1. Install this canary version
+          2. Test new features
+          3. Report any issues on GitHub Issues
+
+          ---
+          *This release was automatically generated from the \`dev\` branch.*
+          EOF
+
+      - name: Create and push tag
+        if: steps.check.outputs.proceed == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.canary_version }}"
+          TAG_NAME="v${VERSION}"
+
+          # 태그가 이미 존재하는지 확인
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "⚠️ Tag $TAG_NAME already exists. Skipping."
+            exit 0
+          fi
+
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # 태그 생성
+          git tag -a "$TAG_NAME" -m "Canary release $VERSION"
+          git push origin "$TAG_NAME"
+
+          echo "✅ Created and pushed tag: $TAG_NAME"
+
+      - name: Publish GitHub Release
+        if: steps.check.outputs.proceed == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: 'v${{ steps.version.outputs.canary_version }}'
+          name: '${{ steps.version.outputs.canary_version }}'
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: true
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        if: steps.check.outputs.proceed == 'true'
+        run: |
+          echo "## 🐤 Canary Release Created!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`v${{ steps.version.outputs.canary_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Published to npm:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@canvasdown/core@${{ steps.version.outputs.canary_version }}\` (canary tag)" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@canvasdown/react-flow@${{ steps.version.outputs.canary_version }}\` (canary tag)" >> $GITHUB_STEP_SUMMARY

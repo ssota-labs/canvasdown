@@ -1,0 +1,74 @@
+{
+  "name": "@canvasdown/react-flow",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@canvasdown/core": "workspace:*",
+    "@xyflow/react": "^12.8.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "@vitest/coverage-v8": "^3.0.0",
+    "@vitest/ui": "^3.0.0",
+    "eslint": "^9.20.1",
+    "jsdom": "^25.0.1",
+    "eslint-config-prettier": "^9.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript-eslint": "^8.18.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ssota/canvasdown.git",
+    "directory": "packages/adapter/react-flow"
+  },
+  "homepage": "https://github.com/ssota/canvasdown#readme",
+  "bugs": {
+    "url": "https://github.com/ssota/canvasdown/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "canvasdown",
+    "react-flow",
+    "react",
+    "diagram",
+    "canvas",
+    "adapter"
+  ]
+}

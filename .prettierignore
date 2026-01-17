@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Generated files
+*.d.ts
+*.js.map
+*.tsbuildinfo
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env*
+
+# Package manager files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large data files
+drizzle/
+docs/data/
+
+# Documentation (optional - remove if you want to format docs)
+docs/
+*.md
+.ssota/
+.cursor/
+.claude/

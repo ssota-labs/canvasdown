@@ -1,0 +1,63 @@
+{
+  "name": "@canvasdown/core",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^1.1.5",
+    "chevrotain": "^11.0.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "@vitest/coverage-v8": "^3.0.0",
+    "eslint": "^9.20.1",
+    "eslint-config-prettier": "^9.1.0",
+    "typescript-eslint": "^8.18.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ssota/canvasdown.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/ssota/canvasdown#readme",
+  "bugs": {
+    "url": "https://github.com/ssota/canvasdown/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "canvasdown",
+    "dsl",
+    "diagram",
+    "graph",
+    "parser",
+    "layout"
+  ]
+}
