@@ -1,4 +1,4 @@
-import { CanvasdownCore } from '@canvasdown/core';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useCanvasdown } from '../../hooks/useCanvasdown';

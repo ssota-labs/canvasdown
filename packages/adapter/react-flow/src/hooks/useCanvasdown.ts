@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { CanvasdownCore } from '@canvasdown/core';
+import type { CanvasdownCore } from '@ssota-labs/canvasdown';
 import type { Edge, Node } from '@xyflow/react';
 import { toReactFlowEdges, toReactFlowNodes } from '../adapter/to-react-flow';
 

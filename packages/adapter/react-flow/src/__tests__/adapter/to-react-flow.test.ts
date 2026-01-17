@@ -1,4 +1,4 @@
-import type { GraphEdge, GraphNode } from '@canvasdown/core';
+import type { GraphEdge, GraphNode } from '@ssota-labs/canvasdown';
 import { describe, expect, it } from 'vitest';
 import {
   toReactFlowEdges,

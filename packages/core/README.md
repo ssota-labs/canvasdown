@@ -1,14 +1,14 @@
-# @canvasdown/core
+# @ssota-labs/canvasdown
 
 **The framework-independent core of Canvasdown** — Parse DSL text, register custom types, and generate graph data with automatic layout.
 
-[![npm version](https://img.shields.io/npm/v/@canvasdown/core)](https://www.npmjs.com/package/@canvasdown/core)
+[![npm version](https://img.shields.io/npm/v/@ssota-labs/canvasdown)](https://www.npmjs.com/package/@ssota-labs/canvasdown)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 
 ## Overview
 
-`@canvasdown/core` is the foundation of Canvasdown. It provides:
+`@ssota-labs/canvasdown` is the foundation of Canvasdown. It provides:
 
 - **DSL Parser** — Chevrotain-based parser for Canvasdown DSL
 - **Type Registry** — Dynamic block and edge type registration
@@ -21,13 +21,13 @@ This package is **framework-independent** — no React, no DOM, just pure TypeSc
 ## Installation
 
 ```bash
-npm install @canvasdown/core
+npm install @ssota-labs/canvasdown
 ```
 
 ## Quick Start
 
 ```typescript
-import { CanvasdownCore } from '@canvasdown/core';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 
 // 1. Create core instance
 const core = new CanvasdownCore();
@@ -301,7 +301,7 @@ core/
 
 This package has **zero framework dependencies**. It's pure TypeScript and can be used with:
 
-- React (via `@canvasdown/react-flow`)
+- React (via `@ssota-labs/canvasdown-reactflow`)
 - Vue (build your own adapter)
 - Svelte (build your own adapter)
 - Vanilla JavaScript
@@ -400,7 +400,7 @@ pnpm lint
 
 ## Related Packages
 
-- [`@canvasdown/react-flow`](../adapter/react-flow/README.md) — React Flow adapter and hooks
+- [`@ssota-labs/canvasdown-reactflow`](../adapter/react-flow/README.md) — React Flow adapter and hooks
 - [Main Canvasdown README](../../README.md) — Full documentation
 
 ## License

@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@canvasdown/core', '@canvasdown/react-flow'],
+  transpilePackages: [
+    '@ssota-labs/canvasdown',
+    '@ssota-labs/canvasdown-reactflow',
+  ],
 };
 
 export default nextConfig;

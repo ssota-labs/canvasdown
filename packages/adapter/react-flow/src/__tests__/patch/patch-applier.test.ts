@@ -1,4 +1,4 @@
-import { CanvasdownCore } from '@canvasdown/core';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 import type {
   AddOperation,
   ConnectOperation,
@@ -7,7 +7,7 @@ import type {
   MoveOperation,
   ResizeOperation,
   UpdateOperation,
-} from '@canvasdown/core';
+} from '@ssota-labs/canvasdown';
 import type { Edge, Node } from '@xyflow/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { applyPatch, type ApplyPatchOptions } from '../../patch/patch-applier';

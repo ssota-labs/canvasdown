@@ -2,8 +2,8 @@
 
 **A Mermaid-like DSL for React Flow, designed for AI agents.**
 
-[![npm version](https://img.shields.io/npm/v/@canvasdown/core)](https://www.npmjs.com/package/@canvasdown/core)
-[![npm version](https://img.shields.io/npm/v/@canvasdown/react-flow)](https://www.npmjs.com/package/@canvasdown/react-flow)
+[![npm version](https://img.shields.io/npm/v/@ssota-labs/canvasdown)](https://www.npmjs.com/package/@ssota-labs/canvasdown)
+[![npm version](https://img.shields.io/npm/v/@ssota-labs/canvasdown-reactflow)](https://www.npmjs.com/package/@ssota-labs/canvasdown-reactflow)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 
@@ -125,10 +125,10 @@ This is crucial for AI agents that need to make iterative changes to a canvas wi
 
 ```bash
 # Core package (DSL parser and layout engine)
-npm install @canvasdown/core
+npm install @ssota-labs/canvasdown
 
 # React Flow adapter
-npm install @canvasdown/react-flow
+npm install @ssota-labs/canvasdown-reactflow
 
 # Peer dependencies for React Flow adapter
 npm install @xyflow/react react react-dom
@@ -139,7 +139,7 @@ npm install @xyflow/react react react-dom
 ### 1. Register Block Types
 
 ```typescript
-import { CanvasdownCore } from '@canvasdown/core';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 
 const core = new CanvasdownCore();
 
@@ -179,7 +179,7 @@ const result = core.parseAndLayout(dsl);
 ### 3. Use with React Flow
 
 ```tsx
-import { useCanvasdown } from '@canvasdown/react-flow';
+import { useCanvasdown } from '@ssota-labs/canvasdown-reactflow';
 import { ReactFlow } from '@xyflow/react';
 import { ShapeBlock } from './components/ShapeBlock';
 import { MarkdownBlock } from './components/MarkdownBlock';
@@ -208,7 +208,7 @@ function MyCanvas() {
 ### 4. Patch the Canvas
 
 ```typescript
-import { useCanvasdownPatch } from '@canvasdown/react-flow';
+import { useCanvasdownPatch } from '@ssota-labs/canvasdown-reactflow';
 
 function MyCanvas() {
   const { nodes, edges, applyPatch } = useCanvasdownPatch(initialDsl, { core });
@@ -278,21 +278,21 @@ source -> target : "label" {               // Label + properties
 
 | Package | Description |
 |---------|-------------|
-| `@canvasdown/core` | DSL parser, type registry, graph builder, dagre layout |
-| `@canvasdown/react-flow` | React Flow adapter, hooks, and components |
+| `@ssota-labs/canvasdown` | DSL parser, type registry, graph builder, dagre layout |
+| `@ssota-labs/canvasdown-reactflow` | React Flow adapter, hooks, and components |
 
 ## Architecture
 
 ```
 packages/
-├── core/                   # @canvasdown/core
+├── core/                   # @ssota-labs/canvasdown
 │   ├── parser/             # Chevrotain-based DSL parser
 │   ├── registry/           # Block/Edge type registration
 │   ├── builder/            # AST → Graph Data conversion
 │   └── layout/             # dagre layout engine
 │
 ├── adapter/
-│   └── react-flow/         # @canvasdown/react-flow
+│   └── react-flow/         # @ssota-labs/canvasdown-reactflow
 │       ├── adapter/        # Core output → React Flow conversion
 │       ├── hooks/          # useCanvasdown, useCanvasdownPatch
 │       └── components/     # CustomEdge, etc.

@@ -3,7 +3,7 @@ import type {
   CanvasdownCore,
   PatchOperation,
   PatchOperationUnion,
-} from '@canvasdown/core';
+} from '@ssota-labs/canvasdown';
 import { useReactFlow } from '@xyflow/react';
 import { CanvasStateManager } from '../adapter/state-manager';
 import { applyPatch, type ApplyPatchOptions } from '../patch/patch-applier';

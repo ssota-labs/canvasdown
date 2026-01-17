@@ -1,19 +1,19 @@
-# @canvasdown/react-flow
+# @ssota-labs/canvasdown-reactflow
 
 **React Flow adapter for Canvasdown** — Render Canvasdown DSL diagrams in React Flow with your custom components.
 
-[![npm version](https://img.shields.io/npm/v/@canvasdown/react-flow)](https://www.npmjs.com/package/@canvasdown/react-flow)
+[![npm version](https://img.shields.io/npm/v/@ssota-labs/canvasdown-reactflow)](https://www.npmjs.com/package/@ssota-labs/canvasdown-reactflow)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 
 ## Overview
 
-`@canvasdown/react-flow` provides React hooks and components to integrate Canvasdown DSL with React Flow. It converts Canvasdown graph data into React Flow nodes and edges, allowing you to use your existing React Flow node components.
+`@ssota-labs/canvasdown-reactflow` provides React hooks and components to integrate Canvasdown DSL with React Flow. It converts Canvasdown graph data into React Flow nodes and edges, allowing you to use your existing React Flow node components.
 
 ## Installation
 
 ```bash
-npm install @canvasdown/react-flow @canvasdown/core @xyflow/react react react-dom
+npm install @ssota-labs/canvasdown-reactflow @ssota-labs/canvasdown @xyflow/react react react-dom
 ```
 
 **Peer Dependencies:**
@@ -24,9 +24,9 @@ npm install @canvasdown/react-flow @canvasdown/core @xyflow/react react react-do
 ## Quick Start
 
 ```tsx
-import { useCanvasdown } from '@canvasdown/react-flow';
+import { useCanvasdown } from '@ssota-labs/canvasdown-reactflow';
 import { ReactFlow } from '@xyflow/react';
-import { CanvasdownCore } from '@canvasdown/core';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 import { ShapeBlock } from './components/ShapeBlock';
 import { MarkdownBlock } from './components/MarkdownBlock';
 
@@ -89,7 +89,7 @@ function MyCanvas() {
 Parse DSL and get React Flow nodes and edges.
 
 ```tsx
-import { useCanvasdown } from '@canvasdown/react-flow';
+import { useCanvasdown } from '@ssota-labs/canvasdown-reactflow';
 
 function MyCanvas() {
   const { nodes, edges, error } = useCanvasdown(dsl, {
@@ -115,7 +115,7 @@ function MyCanvas() {
 Incrementally update canvas with Patch DSL.
 
 ```tsx
-import { useCanvasdownPatch } from '@canvasdown/react-flow';
+import { useCanvasdownPatch } from '@ssota-labs/canvasdown-reactflow';
 
 function MyCanvas() {
   const initialDsl = `
@@ -162,7 +162,7 @@ function MyCanvas() {
 Custom edge component with label support.
 
 ```tsx
-import { CustomEdge } from '@canvasdown/react-flow';
+import { CustomEdge } from '@ssota-labs/canvasdown-reactflow';
 
 const edgeTypes = {
   default: CustomEdge,
@@ -188,8 +188,8 @@ The `CustomEdge` component automatically handles:
 For more control over canvas state:
 
 ```tsx
-import { CanvasStateManager, toReactFlowGraph } from '@canvasdown/react-flow';
-import { CanvasdownCore } from '@canvasdown/core';
+import { CanvasStateManager, toReactFlowGraph } from '@ssota-labs/canvasdown-reactflow';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 
 const core = new CanvasdownCore();
 // ... register types
@@ -212,8 +212,8 @@ const { nodes: newNodes, edges: newEdges } = toReactFlowGraph(patchResult);
 Convert Canvasdown graph data to React Flow format:
 
 ```tsx
-import { toReactFlowNodes, toReactFlowEdges } from '@canvasdown/react-flow';
-import { CanvasdownCore } from '@canvasdown/core';
+import { toReactFlowNodes, toReactFlowEdges } from '@ssota-labs/canvasdown-reactflow';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 
 const core = new CanvasdownCore();
 const result = core.parseAndLayout(dsl);
@@ -276,7 +276,7 @@ Supported Patch DSL commands:
 Full TypeScript support with type inference:
 
 ```tsx
-import type { UseCanvasdownOptions, UseCanvasdownReturn } from '@canvasdown/react-flow';
+import type { UseCanvasdownOptions, UseCanvasdownReturn } from '@ssota-labs/canvasdown-reactflow';
 
 const options: UseCanvasdownOptions = {
   core: canvasdownCore,
@@ -412,7 +412,7 @@ pnpm lint
 
 ## Related Packages
 
-- [`@canvasdown/core`](../core/README.md) — Core DSL parser and layout engine
+- [`@ssota-labs/canvasdown`](../core/README.md) — Core DSL parser and layout engine
 - [Main Canvasdown README](../../README.md) — Full documentation
 
 ## License

@@ -1,4 +1,4 @@
-import { CanvasdownCore } from '@canvasdown/core';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 
 /**
  * Register SSOTA block types with Canvasdown Core

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { CustomEdge } from '@canvasdown/react-flow';
+import { CustomEdge } from '@ssota-labs/canvasdown-reactflow';
 import {
   Background,
   Controls,

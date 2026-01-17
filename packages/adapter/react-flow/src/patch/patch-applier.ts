@@ -8,7 +8,7 @@ import type {
   PatchOperationUnion,
   ResizeOperation,
   UpdateOperation,
-} from '@canvasdown/core';
+} from '@ssota-labs/canvasdown';
 import type { Edge, Node } from '@xyflow/react';
 import { CanvasStateManager } from '../adapter/state-manager';
 

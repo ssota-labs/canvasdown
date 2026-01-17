@@ -1,6 +1,6 @@
 import React from 'react';
-import { CanvasdownCore } from '@canvasdown/core';
-import type { AddOperation } from '@canvasdown/core';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
+import type { AddOperation } from '@ssota-labs/canvasdown';
 import { act, renderHook } from '@testing-library/react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

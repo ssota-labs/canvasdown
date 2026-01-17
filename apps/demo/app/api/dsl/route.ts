@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CanvasdownCore } from '@canvasdown/core';
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 
 export async function POST(request: NextRequest) {
   try {
