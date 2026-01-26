@@ -447,6 +447,74 @@ const dsl = `
 //        Allowed values: red, orange, green, blue, purple, pink, gray
 ```
 
+### TypeScript Type Safety
+
+If you're using Canvasdown in a TypeScript project and want type safety for `propertySchema`, you have two options:
+
+#### Option 1: Use the Built-in Types (Recommended)
+
+If you're using the latest version of Canvasdown with `propertySchema` support, types are already included:
+
+```typescript
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
+
+const core = new CanvasdownCore();
+core.registerBlockType({
+  name: 'shape',
+  defaultProperties: { shapeType: 'rectangle', color: 'blue' },
+  defaultSize: { width: 200, height: 100 },
+  propertySchema: {  // ✅ Type-safe out of the box
+    shapeType: {
+      type: 'enum',
+      enum: ['rectangle', 'ellipse', 'triangle'],
+    },
+  },
+});
+```
+
+#### Option 2: Module Augmentation (For Older Versions or Custom Types)
+
+If you're using an older version or want to extend types, use module augmentation:
+
+```typescript
+// types/canvasdown.d.ts
+import '@ssota-labs/canvasdown';
+
+declare module '@ssota-labs/canvasdown' {
+  interface BlockTypeDefinition<T = Record<string, unknown>> {
+    propertySchema?: {
+      [K in keyof T]?: {
+        type: 'enum';
+        enum: readonly string[];
+        description?: string;
+      } | {
+        type: 'string' | 'number' | 'boolean';
+        description?: string;
+        pattern?: string;  // for string
+        min?: number;     // for number
+        max?: number;     // for number
+      };
+    };
+  }
+}
+
+// Now you can use propertySchema with full type safety
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
+
+const core = new CanvasdownCore();
+core.registerBlockType({
+  name: 'shape',
+  defaultProperties: { shapeType: 'rectangle', color: 'blue' },
+  defaultSize: { width: 200, height: 100 },
+  propertySchema: {  // ✅ Type-safe with augmentation
+    shapeType: {
+      type: 'enum',
+      enum: ['rectangle', 'ellipse', 'triangle'],
+    },
+  },
+});
+```
+
 ### Dynamic Component Rendering via Properties
 
 DSL properties are passed directly to your React components:
