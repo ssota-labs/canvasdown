@@ -14,6 +14,7 @@ import type {
   EdgeTypeDefinition,
   PatchOperationUnion,
   PatchValidationResult,
+  PropertySchema,
 } from './types/index';
 
 /**
@@ -48,6 +49,15 @@ export class CanvasdownCore {
    */
   getBlockType(name: string): BlockTypeDefinition | undefined {
     return this.blockRegistry.get(name);
+  }
+
+  /**
+   * Get property schema for a block type
+   * Returns the propertySchema field from the block type definition
+   */
+  getBlockTypeSchema(name: string): Record<string, PropertySchema> | undefined {
+    const typeDef = this.blockRegistry.get(name);
+    return typeDef?.propertySchema;
   }
 
   /**

@@ -94,6 +94,7 @@ One text block. One tool call. Entire canvas rendered.
 - **Dynamic Component Rendering** — Block properties are passed to your React components for dynamic rendering
 - **Custom Properties** — Define custom properties independent of block types (`@schema`, inline properties)
 - **Type Validation** — Optional runtime validation for block properties
+- **Property Schema** — Define property constraints (enum values, types, ranges) for validation and LLM template generation
 
 ### Edge Features
 - **Edge Properties** — Define custom data on edges
@@ -148,6 +149,18 @@ core.registerBlockType({
   name: 'shape',
   defaultProperties: { shapeType: 'rectangle', color: 'blue' },
   defaultSize: { width: 200, height: 100 },
+  // Optional: Define property schema for validation and LLM template generation
+  propertySchema: {
+    shapeType: {
+      type: 'enum',
+      enum: ['rectangle', 'ellipse', 'triangle', 'diamond'],
+      description: 'Shape type for the block',
+    },
+    color: {
+      type: 'enum',
+      enum: ['red', 'orange', 'green', 'blue', 'purple', 'pink', 'gray'],
+    },
+  },
 });
 
 core.registerBlockType({
@@ -353,6 +366,13 @@ core.registerBlockType({
   component: KanbanCard,    // ← Your KanbanCard component!
   defaultProperties: { status: 'todo', assignee: null },
   defaultSize: { width: 300, height: 200 },
+  propertySchema: {
+    status: {
+      type: 'enum',
+      enum: ['todo', 'in-progress', 'done'],
+      description: 'Task status',
+    },
+  },
 });
 
 core.registerBlockType({
@@ -361,6 +381,70 @@ core.registerBlockType({
   defaultProperties: { tableName: '', columns: [] },
   defaultSize: { width: 250, height: 300 },
 });
+```
+
+### Property Schema for LLM Template Generation
+
+Define property schemas to generate template prompts for LLMs:
+
+```typescript
+core.registerBlockType({
+  name: 'shape',
+  defaultProperties: { shapeType: 'rectangle', color: 'blue' },
+  defaultSize: { width: 200, height: 100 },
+  propertySchema: {
+    shapeType: {
+      type: 'enum',
+      enum: ['rectangle', 'ellipse', 'triangle', 'diamond'],
+      description: 'Shape type for the block',
+    },
+    color: {
+      type: 'enum',
+      enum: ['red', 'orange', 'green', 'blue', 'purple', 'pink', 'gray'],
+    },
+  },
+});
+
+// Generate template prompt for LLMs
+function generateTemplatePrompt(core: CanvasdownCore): string {
+  const blockTypes = core.listBlockTypes();
+  let prompt = 'Block Type Rules:\n\n';
+  
+  for (const typeName of blockTypes) {
+    const typeDef = core.getBlockType(typeName);
+    if (typeDef?.propertySchema) {
+      prompt += `${typeName} Block Rules:\n`;
+      for (const [propName, schema] of Object.entries(typeDef.propertySchema)) {
+        if (schema.type === 'enum') {
+          prompt += `- ${propName}: ${schema.enum?.join(', ')}\n`;
+        }
+      }
+      prompt += '\n';
+    }
+  }
+  
+  return prompt;
+}
+
+// Example output:
+// shape Block Rules:
+// - shapeType: rectangle, ellipse, triangle, diamond
+// - color: red, orange, green, blue, purple, pink, gray
+```
+
+Property schemas also provide **runtime validation** - invalid values will throw descriptive errors:
+
+```typescript
+// This will throw an error:
+const dsl = `
+@shape start "Start" {
+  color: greend  // Invalid: not in enum
+}
+`;
+
+// Error: Property 'color' of block 'start' (type 'shape') 
+//        has invalid value 'greend'. 
+//        Allowed values: red, orange, green, blue, purple, pink, gray
 ```
 
 ### Dynamic Component Rendering via Properties

@@ -220,4 +220,170 @@ describe('GraphBuilder', () => {
 
     expect(() => builder.build(ast)).toThrow('Validation failed');
   });
+
+  it('should validate block properties against propertySchema enum', () => {
+    blockRegistry.register({
+      name: 'shape-enum',
+      defaultProperties: { shapeType: 'rectangle', color: 'blue' },
+      defaultSize: { width: 100, height: 100 },
+      propertySchema: {
+        shapeType: {
+          type: 'enum',
+          enum: ['rectangle', 'ellipse', 'triangle'],
+        },
+        color: {
+          type: 'enum',
+          enum: ['red', 'blue', 'green'],
+        },
+      },
+    });
+
+    const ast: CanvasdownAST = {
+      direction: 'LR',
+      schemas: [],
+      nodes: [
+        {
+          id: 'start',
+          type: 'shape-enum',
+          label: 'Start',
+          properties: { shapeType: 'invalid', color: 'blue' }, // invalid shapeType
+        },
+      ],
+      edges: [],
+    };
+
+    expect(() => builder.build(ast)).toThrow(
+      "Property 'shapeType' of block 'start' (type 'shape-enum') has invalid value 'invalid'"
+    );
+  });
+
+  it('should validate block properties against propertySchema number range', () => {
+    blockRegistry.register({
+      name: 'number-block',
+      defaultProperties: { value: 5 },
+      defaultSize: { width: 100, height: 100 },
+      propertySchema: {
+        value: {
+          type: 'number',
+          min: 1,
+          max: 10,
+        },
+      },
+    });
+
+    const ast: CanvasdownAST = {
+      direction: 'LR',
+      schemas: [],
+      nodes: [
+        {
+          id: 'node1',
+          type: 'number-block',
+          label: 'Node 1',
+          properties: { value: 15 }, // exceeds max
+        },
+      ],
+      edges: [],
+    };
+
+    expect(() => builder.build(ast)).toThrow(
+      "Property 'value' of block 'node1' (type 'number-block') value 15 is greater than maximum 10"
+    );
+  });
+
+  it('should validate block properties against propertySchema string pattern', () => {
+    blockRegistry.register({
+      name: 'url-block',
+      defaultProperties: { url: '' },
+      defaultSize: { width: 100, height: 100 },
+      propertySchema: {
+        url: {
+          type: 'string',
+          pattern: '^https?://',
+        },
+      },
+    });
+
+    const ast: CanvasdownAST = {
+      direction: 'LR',
+      schemas: [],
+      nodes: [
+        {
+          id: 'node1',
+          type: 'url-block',
+          label: 'Node 1',
+          properties: { url: 'invalid-url' }, // doesn't match pattern
+        },
+      ],
+      edges: [],
+    };
+
+    expect(() => builder.build(ast)).toThrow(
+      "Property 'url' of block 'node1' (type 'url-block') value does not match pattern"
+    );
+  });
+
+  it('should validate block properties against propertySchema boolean', () => {
+    blockRegistry.register({
+      name: 'bool-block',
+      defaultProperties: { enabled: true },
+      defaultSize: { width: 100, height: 100 },
+      propertySchema: {
+        enabled: {
+          type: 'boolean',
+        },
+      },
+    });
+
+    const ast: CanvasdownAST = {
+      direction: 'LR',
+      schemas: [],
+      nodes: [
+        {
+          id: 'node1',
+          type: 'bool-block',
+          label: 'Node 1',
+          properties: { enabled: 'not-a-boolean' }, // invalid type
+        },
+      ],
+      edges: [],
+    };
+
+    expect(() => builder.build(ast)).toThrow(
+      "Property 'enabled' of block 'node1' (type 'bool-block') must be a boolean"
+    );
+  });
+
+  it('should pass validation when properties match propertySchema', () => {
+    blockRegistry.register({
+      name: 'shape-valid',
+      defaultProperties: { shapeType: 'rectangle', color: 'blue' },
+      defaultSize: { width: 100, height: 100 },
+      propertySchema: {
+        shapeType: {
+          type: 'enum',
+          enum: ['rectangle', 'ellipse', 'triangle'],
+        },
+        color: {
+          type: 'enum',
+          enum: ['red', 'blue', 'green'],
+        },
+      },
+    });
+
+    const ast: CanvasdownAST = {
+      direction: 'LR',
+      schemas: [],
+      nodes: [
+        {
+          id: 'start',
+          type: 'shape-valid',
+          label: 'Start',
+          properties: { shapeType: 'ellipse', color: 'red' }, // valid values
+        },
+      ],
+      edges: [],
+    };
+
+    expect(() => builder.build(ast)).not.toThrow();
+  });
 });

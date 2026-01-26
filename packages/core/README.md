@@ -83,6 +83,18 @@ core.registerBlockType({
     // Optional validation function
     return props.status in ['todo', 'in-progress', 'done'];
   },
+  propertySchema: {
+    // Optional: Define property constraints for validation and LLM templates
+    status: {
+      type: 'enum',
+      enum: ['todo', 'in-progress', 'done'],
+      description: 'Task status',
+    },
+    priority: {
+      type: 'enum',
+      enum: ['low', 'medium', 'high'],
+    },
+  },
 });
 ```
 
@@ -174,7 +186,17 @@ core.registerBlockType({
   defaultProperties: { /* ... */ },
   defaultSize: { width: 200, height: 100 },
   validate?: (props) => boolean,
+  propertySchema?: Record<string, PropertySchema>,
 });
+```
+
+##### `getBlockTypeSchema(name: string)`
+
+Get property schema for a block type. Useful for generating LLM template prompts.
+
+```typescript
+const schema = core.getBlockTypeSchema('shape');
+// Returns: { shapeType: { type: 'enum', enum: [...] }, ... }
 ```
 
 ##### `registerEdgeType(definition: EdgeTypeDefinition)`
@@ -239,6 +261,22 @@ interface BlockTypeDefinition<TProps = Record<string, unknown>> {
   defaultProperties: TProps;
   defaultSize: { width: number; height: number };
   validate?: (props: TProps) => boolean;
+  propertySchema?: Record<string, PropertySchema>;
+}
+```
+
+### `PropertySchema`
+
+Define property constraints for validation and LLM template generation.
+
+```typescript
+interface PropertySchema {
+  type: 'string' | 'number' | 'boolean' | 'enum';
+  enum?: string[];           // Required when type is 'enum'
+  min?: number;              // For number type
+  max?: number;              // For number type
+  pattern?: string;           // Regex pattern for string type
+  description?: string;       // Description for template prompts
 }
 ```
 

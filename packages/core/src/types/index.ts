@@ -1,4 +1,4 @@
-export type { BlockTypeDefinition } from './block-type.types';
+export type { BlockTypeDefinition, PropertySchema } from './block-type.types';
 export type { EdgeTypeDefinition } from './edge-type.types';
 export type { ASTNode, ASTEdge, CanvasdownAST, Direction } from './ast.types';
 export type { GraphNode, GraphEdge } from './graph.types';

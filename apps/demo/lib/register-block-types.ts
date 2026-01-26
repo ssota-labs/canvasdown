@@ -14,6 +14,40 @@ export function registerBlockTypes(core: CanvasdownCore) {
       borderStyle: 'solid',
     },
     defaultSize: { width: 154, height: 70 },
+    propertySchema: {
+      shapeType: {
+        type: 'enum',
+        enum: [
+          'rectangle',
+          'ellipse',
+          'triangle',
+          'diamond',
+          'hexagon',
+          'parallelogram',
+          'cylinder',
+        ],
+        description: 'Shape type for the block',
+      },
+      color: {
+        type: 'enum',
+        enum: [
+          'red',
+          'orange',
+          'amber',
+          'green',
+          'blue',
+          'purple',
+          'pink',
+          'gray',
+        ],
+        description: 'Color of the shape',
+      },
+      borderStyle: {
+        type: 'enum',
+        enum: ['solid', 'dashed', 'dotted'],
+        description: 'Border style of the shape',
+      },
+    },
   });
 
   // Markdown block type
@@ -23,6 +57,12 @@ export function registerBlockTypes(core: CanvasdownCore) {
       content: '',
     },
     defaultSize: { width: 300, height: 200 },
+    propertySchema: {
+      content: {
+        type: 'string',
+        description: 'Markdown content to display',
+      },
+    },
   });
 
   // Image block type
@@ -35,6 +75,24 @@ export function registerBlockTypes(core: CanvasdownCore) {
       alt: '',
     },
     defaultSize: { width: 300, height: 200 },
+    propertySchema: {
+      imageUrl: {
+        type: 'string',
+        description: 'URL of the image to display',
+      },
+      caption: {
+        type: 'string',
+        description: 'Caption text for the image',
+      },
+      isCaptionVisible: {
+        type: 'boolean',
+        description: 'Whether the caption is visible',
+      },
+      alt: {
+        type: 'string',
+        description: 'Alternative text for the image',
+      },
+    },
   });
 
   // YouTube block type
@@ -45,6 +103,16 @@ export function registerBlockTypes(core: CanvasdownCore) {
       videoId: '',
     },
     defaultSize: { width: 400, height: 260 },
+    propertySchema: {
+      url: {
+        type: 'string',
+        description: 'Full YouTube URL',
+      },
+      videoId: {
+        type: 'string',
+        description: 'YouTube video ID',
+      },
+    },
   });
 
   // Edge type
