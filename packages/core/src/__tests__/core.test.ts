@@ -47,6 +47,73 @@ describe('CanvasdownCore', () => {
       expect(types).toContain('shape');
       expect(types).toContain('text');
     });
+
+    it('should register block type with propertySchema', () => {
+      core.registerBlockType({
+        name: 'shape',
+        defaultProperties: { shapeType: 'rectangle', color: 'blue' },
+        defaultSize: { width: 200, height: 100 },
+        propertySchema: {
+          shapeType: {
+            type: 'enum',
+            enum: ['rectangle', 'ellipse', 'triangle'],
+            description: 'Shape type for the block',
+          },
+          color: {
+            type: 'enum',
+            enum: ['red', 'blue', 'green'],
+          },
+        },
+      });
+
+      const typeDef = core.getBlockType('shape');
+      expect(typeDef?.propertySchema).toBeDefined();
+      expect(typeDef?.propertySchema?.shapeType?.type).toBe('enum');
+      expect(typeDef?.propertySchema?.shapeType?.enum).toEqual([
+        'rectangle',
+        'ellipse',
+        'triangle',
+      ]);
+    });
+
+    it('should get property schema for a block type', () => {
+      core.registerBlockType({
+        name: 'shape',
+        defaultProperties: { shapeType: 'rectangle' },
+        defaultSize: { width: 200, height: 100 },
+        propertySchema: {
+          shapeType: {
+            type: 'enum',
+            enum: ['rectangle', 'ellipse'],
+          },
+          color: {
+            type: 'enum',
+            enum: ['red', 'blue'],
+          },
+        },
+      });
+
+      const schema = core.getBlockTypeSchema('shape');
+      expect(schema).toBeDefined();
+      expect(schema?.shapeType?.enum).toEqual(['rectangle', 'ellipse']);
+      expect(schema?.color?.enum).toEqual(['red', 'blue']);
+    });
+
+    it('should return undefined for property schema when not defined', () => {
+      core.registerBlockType({
+        name: 'shape',
+        defaultProperties: {},
+        defaultSize: { width: 200, height: 100 },
+      });
+
+      const schema = core.getBlockTypeSchema('shape');
+      expect(schema).toBeUndefined();
+    });
+
+    it('should return undefined for property schema of unregistered type', () => {
+      const schema = core.getBlockTypeSchema('unknown');
+      expect(schema).toBeUndefined();
+    });
   });
 
   describe('Parsing', () => {

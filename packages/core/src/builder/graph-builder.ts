@@ -1,6 +1,7 @@
 import { BlockTypeRegistry } from '../registry/block-type-registry';
 import { EdgeTypeRegistry } from '../registry/edge-type-registry';
 import type { ASTEdge, ASTNode, CanvasdownAST } from '../types/ast.types';
+import type { PropertySchema } from '../types/block-type.types';
 import type {
   CustomPropertySchema,
   CustomPropertyValue,
@@ -64,6 +65,16 @@ export class GraphBuilder {
       typeDef.defaultProperties,
       astNode.properties
     );
+
+    // Validate against propertySchema if provided
+    if (typeDef.propertySchema) {
+      this.validatePropertySchema(
+        typeDef.propertySchema,
+        mergedProperties,
+        astNode.id,
+        astNode.type
+      );
+    }
 
     // Validate if validator is provided
     if (typeDef.validate && !typeDef.validate(mergedProperties)) {
@@ -348,6 +359,85 @@ export class GraphBuilder {
         return CustomPropertyType.URL;
       default:
         return CustomPropertyType.TEXT;
+    }
+  }
+
+  /**
+   * Validate properties against propertySchema
+   */
+  private validatePropertySchema(
+    propertySchema: Record<string, PropertySchema>,
+    properties: Record<string, unknown>,
+    blockId: string,
+    blockType: string
+  ): void {
+    for (const [propName, schema] of Object.entries(propertySchema)) {
+      const value = properties[propName];
+
+      // Skip validation if property is not set (optional properties)
+      if (value === undefined) {
+        continue;
+      }
+
+      switch (schema.type) {
+        case 'enum':
+          if (schema.enum && !schema.enum.includes(value as string)) {
+            throw new Error(
+              `Property '${propName}' of block '${blockId}' (type '${blockType}') ` +
+                `has invalid value '${value}'. ` +
+                `Allowed values: ${schema.enum.join(', ')}`
+            );
+          }
+          break;
+
+        case 'number':
+          if (typeof value !== 'number') {
+            throw new Error(
+              `Property '${propName}' of block '${blockId}' (type '${blockType}') ` +
+                `must be a number, got ${typeof value}`
+            );
+          }
+          if (schema.min !== undefined && value < schema.min) {
+            throw new Error(
+              `Property '${propName}' of block '${blockId}' (type '${blockType}') ` +
+                `value ${value} is less than minimum ${schema.min}`
+            );
+          }
+          if (schema.max !== undefined && value > schema.max) {
+            throw new Error(
+              `Property '${propName}' of block '${blockId}' (type '${blockType}') ` +
+                `value ${value} is greater than maximum ${schema.max}`
+            );
+          }
+          break;
+
+        case 'string':
+          if (typeof value !== 'string') {
+            throw new Error(
+              `Property '${propName}' of block '${blockId}' (type '${blockType}') ` +
+                `must be a string, got ${typeof value}`
+            );
+          }
+          if (schema.pattern) {
+            const pattern = new RegExp(schema.pattern);
+            if (!pattern.test(value)) {
+              throw new Error(
+                `Property '${propName}' of block '${blockId}' (type '${blockType}') ` +
+                  `value does not match pattern: ${schema.pattern}`
+              );
+            }
+          }
+          break;
+
+        case 'boolean':
+          if (typeof value !== 'boolean') {
+            throw new Error(
+              `Property '${propName}' of block '${blockId}' (type '${blockType}') ` +
+                `must be a boolean, got ${typeof value}`
+            );
+          }
+          break;
+      }
     }
   }
 }
