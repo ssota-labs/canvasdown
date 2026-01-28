@@ -52,10 +52,10 @@ core.registerBlockType({
 core.registerBlockType({
   name: 'zone',
   isGroup: true, // Mark as group node
-  defaultProperties: { 
+  defaultProperties: {
     direction: 'TB', // Default direction for children
     color: 'gray',
-    padding: 20 
+    padding: 20,
   },
   defaultSize: { width: 400, height: 300 },
 });
@@ -120,7 +120,7 @@ core.registerBlockType({
     priority: 'medium',
   },
   defaultSize: { width: 300, height: 200 },
-  validate: (props) => {
+  validate: props => {
     // Optional validation function
     return props.status in ['todo', 'in-progress', 'done'];
   },
@@ -145,13 +145,14 @@ core.registerBlockType({
   defaultProperties: {
     direction: 'TB', // Layout direction for children (LR, RL, TB, BT)
     color: 'gray',
-    padding: 20,     // Padding around children
+    padding: 20, // Padding around children
   },
   defaultSize: { width: 400, height: 300 },
 });
 ```
 
 **Zone/Group Notes:**
+
 - Set `isGroup: true` to mark a block type as a zone/group
 - Zones can contain child blocks using `@zone ... @end` syntax
 - Each zone can have its own `direction` property for child layout
@@ -240,6 +241,7 @@ const result = core.parseAndLayout(dsl);
 ```
 
 **Zone Features:**
+
 - **Nested Structure**: Zones can contain any blocks, including other zones
 - **Independent Direction**: Each zone can have its own `direction` (LR, RL, TB, BT)
 - **Automatic Layout**: Children are automatically positioned within their parent zone
@@ -286,6 +288,7 @@ const core = new CanvasdownCore(options?: CanvasdownCoreOptions);
 ```
 
 **Options:**
+
 ```typescript
 interface CanvasdownCoreOptions {
   defaultExtent?: 'parent' | [[number, number], [number, number]] | null;
@@ -306,10 +309,12 @@ Register a new block type.
 ```typescript
 core.registerBlockType({
   name: 'my-block',
-  defaultProperties: { /* ... */ },
+  defaultProperties: {
+    /* ... */
+  },
   defaultSize: { width: 200, height: 100 },
-  validate?: (props) => boolean,
-  propertySchema?: Record<string, PropertySchema>,
+  validate: props => boolean,
+  propertySchema: Record<string, PropertySchema>,
 });
 ```
 
@@ -341,14 +346,15 @@ Parse DSL text and apply automatic layout.
 
 ```typescript
 const result = core.parseAndLayout(dsl, {
-  baseGraph?: GraphOutput, // For patch mode
-  direction?: 'LR' | 'RL' | 'TB' | 'BT',
+  baseGraph: GraphOutput, // For patch mode
+  direction: 'LR' | 'RL' | 'TB' | 'BT',
 });
 ```
 
 **Note**: For zone children, positions are calculated relative to their parent zone. React Flow adapters automatically handle `parentId` and `extent` properties.
 
 Returns:
+
 ```typescript
 {
   nodes: GraphNode[];
@@ -402,6 +408,7 @@ interface BlockTypeDefinition<TProps = Record<string, unknown>> {
 ```
 
 **`isGroup` Property:**
+
 - Set `isGroup: true` to mark a block type as a zone/group
 - Group nodes can contain child nodes (via `@zone ... @end` syntax)
 - Children automatically get `parentId` set to the group's ID
@@ -414,11 +421,11 @@ Define property constraints for validation and LLM template generation.
 ```typescript
 interface PropertySchema {
   type: 'string' | 'number' | 'boolean' | 'enum';
-  enum?: string[];           // Required when type is 'enum'
-  min?: number;              // For number type
-  max?: number;              // For number type
-  pattern?: string;           // Regex pattern for string type
-  description?: string;       // Description for template prompts
+  enum?: string[]; // Required when type is 'enum'
+  min?: number; // For number type
+  max?: number; // For number type
+  pattern?: string; // Regex pattern for string type
+  description?: string; // Description for template prompts
 }
 ```
 
@@ -449,11 +456,13 @@ interface GraphNode<TNodeData = Record<string, unknown>> {
 ```
 
 **`parentId` Property:**
+
 - Automatically set for children of zones/groups
 - Position is relative to parent zone when `parentId` is present
 - React Flow adapters use this to render group nodes
 
 **`data.extent` Property:**
+
 - Controls whether child nodes are constrained within parent boundaries
 - Set via `defaultExtent` option in `CanvasdownCore` constructor
 - Can be overridden per-node in DSL using `extent` property

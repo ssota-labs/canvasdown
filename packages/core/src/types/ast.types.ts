@@ -6,6 +6,7 @@ import type {
   CustomPropertySchema,
   CustomPropertyValue,
 } from './custom-property.types';
+import type { MarkerConfig } from './edge-type.types';
 
 /**
  * Direction hint for layout engine
@@ -53,6 +54,12 @@ export interface ASTEdge {
 
   /** Optional label at the end (target) position */
   endLabel?: string;
+
+  /** Optional marker at the end of the edge (target side) */
+  markerEnd?: string | MarkerConfig;
+
+  /** Optional marker at the start of the edge (source side) */
+  markerStart?: string | MarkerConfig;
 
   /** Optional edge type name (must be registered) */
   edgeType?: string;

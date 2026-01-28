@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
-import type { Edge, Node } from '@xyflow/react';
+import type { GraphEdge, GraphNode } from '@ssota-labs/canvasdown';
 import {
   Card,
   CardContent,
@@ -19,8 +19,8 @@ const MonacoEditor = dynamic(
 );
 
 interface DataViewerProps {
-  nodes: Node[];
-  edges: Edge[];
+  nodes: GraphNode[];
+  edges: GraphEdge[];
   metadata: Record<string, unknown>;
   parseError: string | null;
 }

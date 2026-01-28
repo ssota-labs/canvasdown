@@ -142,6 +142,47 @@ describe('toReactFlowEdges', () => {
     const edges = toReactFlowEdges([createEdge()]);
     expect(edges[0]?.type).toBe('default');
   });
+
+  it('should include markerEnd in React Flow edge', () => {
+    const graphEdge: GraphEdge = {
+      id: 'edge1',
+      source: 'node1',
+      target: 'node2',
+      markerEnd: 'arrowclosed',
+      data: {},
+    };
+
+    const edges = toReactFlowEdges([graphEdge], 'LR');
+    expect(edges[0]?.markerEnd).toBe('arrowclosed');
+  });
+
+  it('should include markerStart in React Flow edge', () => {
+    const graphEdge: GraphEdge = {
+      id: 'edge1',
+      source: 'node1',
+      target: 'node2',
+      markerStart: 'arrow',
+      data: {},
+    };
+
+    const edges = toReactFlowEdges([graphEdge], 'LR');
+    expect(edges[0]?.markerStart).toBe('arrow');
+  });
+
+  it('should include both markers in React Flow edge', () => {
+    const graphEdge: GraphEdge = {
+      id: 'edge1',
+      source: 'node1',
+      target: 'node2',
+      markerStart: 'arrow',
+      markerEnd: 'arrowclosed',
+      data: {},
+    };
+
+    const edges = toReactFlowEdges([graphEdge], 'LR');
+    expect(edges[0]?.markerStart).toBe('arrow');
+    expect(edges[0]?.markerEnd).toBe('arrowclosed');
+  });
 });
 
 describe('toReactFlowGraph', () => {

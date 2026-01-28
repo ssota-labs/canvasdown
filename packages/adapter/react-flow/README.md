@@ -116,8 +116,10 @@ function MyCanvas() {
 ## Features
 
 - **`useCanvasdown` Hook** — Parse DSL and get React Flow nodes/edges
+- **NodeTypes generic** — Type-safe node types: pass `nodeTypes` to constrain `nodes[].type` to your registered keys
 - **`useCanvasdownPatch` Hook** — Incrementally update canvas with Patch DSL
-- **Custom Edge Component** — `CustomEdge` with label support
+- **Custom Edge Component** — `CustomEdge` with label and marker (arrow) support
+- **Edge markers** — Configure `markerEnd` / `markerStart` in DSL or via edge type `edgePropertySchema`
 - **State Management** — `CanvasStateManager` for advanced use cases
 - **Type Safety** — Full TypeScript support
 - **Zone/Group Support** — Automatic conversion of zones to React Flow group nodes with `parentId` and `extent`
@@ -144,11 +146,32 @@ function MyCanvas() {
 **Options:**
 - `core: CanvasdownCore` — Core instance with registered types
 - `direction?: 'LR' | 'RL' | 'TB' | 'BT'` — Override layout direction
+- `nodeTypes?: TNodeTypes` — Optional. Pass your React Flow `nodeTypes` object for type safety (see below)
 
 **Returns:**
 - `nodes: Node[]` — React Flow nodes
-- `edges: Edge[]` — React Flow edges
-- `error: Error | null` — Parsing error if any
+- `edges: Edge[]` — React Flow edges (include `sourceHandle` / `targetHandle` from layout direction)
+- `error: string | null` — Parsing error message if any
+
+#### Type-safe node types (NodeTypes generic)
+
+Pass `nodeTypes` so that returned `nodes` have `type` constrained to your registered keys. Fully backward compatible.
+
+```tsx
+const nodeTypes = {
+  shape: ShapeBlock,
+  markdown: MarkdownBlock,
+  zone: ZoneBlock,
+} as const;
+
+const { nodes, edges } = useCanvasdown(dsl, {
+  core,
+  nodeTypes, // nodes[].type is now 'shape' | 'markdown' | 'zone'
+});
+
+// TypeScript knows the exact node type keys
+<ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} />
+```
 
 ### `useCanvasdownPatch`
 
@@ -199,7 +222,7 @@ function MyCanvas() {
 
 ### `CustomEdge`
 
-Custom edge component with label support.
+Custom edge component with label and marker support.
 
 ```tsx
 import { CustomEdge } from '@ssota-labs/canvasdown-reactflow';
@@ -216,10 +239,10 @@ const edgeTypes = {
 ```
 
 The `CustomEdge` component automatically handles:
-- Edge labels
-- Source/target labels
+- Edge labels (center, start, end)
+- **Edge markers** — Renders SVG markers for `markerEnd` / `markerStart` when set (e.g. `arrowclosed`, `arrow`)
 - Custom edge styles
-- Animated edges
+- Selection styling
 
 ## Advanced Usage
 
@@ -376,6 +399,21 @@ const options: UseCanvasdownOptions = {
 const { nodes, edges }: UseCanvasdownReturn = useCanvasdown(dsl, options);
 ```
 
+**Generic node types:** Use the `NodeTypes` generic to get type-safe `nodes[].type`:
+
+```tsx
+const nodeTypes = {
+  shape: ShapeBlock,
+  markdown: MarkdownBlock,
+} as const;
+
+const { nodes, edges } = useCanvasdown(dsl, {
+  core,
+  nodeTypes,
+});
+// nodes[].type is 'shape' | 'markdown'
+```
+
 ## Examples
 
 ### Basic Flowchart
@@ -483,7 +521,9 @@ function InteractiveCanvas() {
 }
 ```
 
-### Custom Edge Labels
+### Edge labels and markers
+
+**Labels (center, start, end):**
 
 ```tsx
 const dsl = `
@@ -493,17 +533,45 @@ canvas TB
 @shape b "Node B"
 
 a -> b : "main flow" {
-  sourceLabel: "from"
-  targetLabel: "to"
-  animated: true
+  startLabel: "→"
+  endLabel: "✓"
 }
 `;
-
-// CustomEdge automatically handles labels
-const edgeTypes = {
-  default: CustomEdge,
-};
 ```
+
+**Markers (arrows at source/target):**  
+Register edge type with `edgePropertySchema` and set markers in DSL.
+
+In your Canvasdown core setup (e.g. `register-block-types.ts`):
+
+```tsx
+core.registerEdgeType({
+  name: 'default',
+  defaultShape: 'default',
+  defaultStyle: { stroke: '#b1b1b7', strokeWidth: 2 },
+  edgePropertySchema: {
+    markerEnd: {
+      type: 'enum',
+      enum: ['arrow', 'arrowclosed'],
+      description: 'Marker at the end of the edge (target side)',
+    },
+    markerStart: {
+      type: 'enum',
+      enum: ['arrow', 'arrowclosed'],
+      description: 'Marker at the start of the edge (source side)',
+    },
+  },
+});
+```
+
+In DSL:
+
+```tsx
+a -> b { markerEnd: "arrowclosed" }
+a -> b { markerStart: "arrow", markerEnd: "arrowclosed" }
+```
+
+`CustomEdge` renders SVG marker definitions and passes `url(#id)` to React Flow’s `BaseEdge`, so arrows appear without extra setup.
 
 ## API Reference
 
@@ -515,13 +583,13 @@ Parse DSL and return React Flow nodes/edges.
 
 Initialize canvas and return patch function.
 
-### `toReactFlowNodes(graphNodes: GraphNode[])`
+### `toReactFlowNodes(graphNodes: GraphNode[])` / `toReactFlowNodes<TNodeTypes>(graphNodes: GraphNode[])`
 
-Convert Canvasdown nodes to React Flow nodes.
+Convert Canvasdown nodes to React Flow nodes. When using `useCanvasdown` with the `nodeTypes` option, the generic constrains returned nodes’ `type` to your registered keys.
 
-### `toReactFlowEdges(graphEdges: GraphEdge[])`
+### `toReactFlowEdges(graphEdges: GraphEdge[], direction?: 'LR' | 'RL' | 'TB' | 'BT')`
 
-Convert Canvasdown edges to React Flow edges.
+Convert Canvasdown edges to React Flow edges. Sets `sourceHandle` / `targetHandle` from `direction` and passes through `markerEnd` / `markerStart` when present.
 
 ### `toReactFlowGraph(graph: GraphOutput)`
 
@@ -533,7 +601,7 @@ State manager for advanced canvas operations.
 
 ### `CustomEdge`
 
-React Flow edge component with label support.
+React Flow edge component with label and marker (arrow) support. Renders SVG marker definitions for `markerEnd` / `markerStart` when provided by the edge data.
 
 ## Development
 
