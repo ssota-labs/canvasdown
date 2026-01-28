@@ -22,10 +22,10 @@ import { ZoneBlock } from '@/components/blocks/zone-block';
  * 모든 블록 타입을 React Flow 노드로 등록
  * useCanvasdown 훅에 전달하면 nodes의 type 필드가 타입 안정성을 갖게 됨
  */
-export const CANVAS_NODE_TYPES: NodeTypes = {
+export const CANVAS_NODE_TYPES = {
   shape: ShapeBlock,
   markdown: MarkdownBlock,
   image: ImageBlock,
   youtube: YouTubeBlock,
   zone: ZoneBlock,
-} as const;
+} as const satisfies NodeTypes;

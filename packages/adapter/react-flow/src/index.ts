@@ -19,6 +19,13 @@ export {
   type UseCanvasdownPatchReturn,
 } from './hooks/index';
 
+// Parser
+export {
+  parseCanvasdown,
+  type ParseCanvasdownOptions,
+  type ParseCanvasdownResult,
+} from './parseCanvasdown';
+
 // Patch
 export { applyPatch, type ApplyPatchOptions } from './patch/index';
 

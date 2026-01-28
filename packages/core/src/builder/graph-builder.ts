@@ -174,8 +174,72 @@ export class GraphBuilder {
       graphNode.parentId = astNode.parentId;
       // Apply default extent if not explicitly set in DSL properties
       // DSL properties take precedence over defaultExtent option
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7246/ingest/cd0008d3-9a3e-45ef-93d5-cb4299cc3388',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'graph-builder.ts:173',
+            message: 'Building node with parentId',
+            data: {
+              nodeId: astNode.id,
+              parentId: astNode.parentId,
+              hasExtentInData: !!data.extent,
+              defaultExtent: this.options?.defaultExtent,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'E',
+          }),
+        }
+      ).catch(() => {});
+      // #endregion
       if (!data.extent && this.options?.defaultExtent !== undefined) {
         data.extent = this.options.defaultExtent;
+        // #region agent log
+        fetch(
+          'http://127.0.0.1:7246/ingest/cd0008d3-9a3e-45ef-93d5-cb4299cc3388',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'graph-builder.ts:178',
+              message: 'Applied defaultExtent',
+              data: { nodeId: astNode.id, extent: data.extent },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'E',
+            }),
+          }
+        ).catch(() => {});
+        // #endregion
+      } else {
+        // #region agent log
+        fetch(
+          'http://127.0.0.1:7246/ingest/cd0008d3-9a3e-45ef-93d5-cb4299cc3388',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'graph-builder.ts:180',
+              message: 'No extent applied',
+              data: {
+                nodeId: astNode.id,
+                hasExtentInData: !!data.extent,
+                hasDefaultExtent: !!this.options?.defaultExtent,
+              },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'E',
+            }),
+          }
+        ).catch(() => {});
+        // #endregion
       }
     }
 
