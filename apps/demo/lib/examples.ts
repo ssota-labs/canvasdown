@@ -149,6 +149,62 @@ step4 -> done : "complete"
 node1 -> node2 : "connects"
 `,
   },
+  {
+    id: 'zone-example',
+    name: 'Zone Example',
+    description: 'Example with zones (groups) containing child nodes',
+    category: 'advanced',
+    dsl: `canvas TB
+
+@zone thesis "Core Thesis" {
+  direction: TB,
+  color: blue
+}
+  @shape main_thesis "Video's Main Argument" {
+    shapeType: ellipse,
+    color: blue
+  }
+@end
+
+@zone claims "Supporting Claims" {
+  direction: LR,
+  color: green
+}
+  @shape claim1 "Claim 1" {
+    shapeType: rectangle,
+    color: green
+  }
+  @shape claim2 "Claim 2" {
+    shapeType: rectangle,
+    color: green
+  }
+  @shape claim3 "Claim 3" {
+    shapeType: rectangle,
+    color: green
+  }
+@end
+
+@zone evidence "Evidence" {
+  direction: TB,
+  color: gray
+}
+  @shape ev1 "Evidence 1" {
+    shapeType: rectangle,
+    borderStyle: dashed,
+    color: gray
+  }
+  @shape ev2 "Evidence 2" {
+    shapeType: rectangle,
+    borderStyle: dashed,
+    color: gray
+  }
+@end
+
+main_thesis -> claim1 : "supports"
+main_thesis -> claim2 : "supports"
+claim1 -> ev1 : "based on"
+`,
+  },
 ];
 
 export function getExampleById(id: string): Example | undefined {

@@ -30,6 +30,9 @@ export interface ASTNode {
 
   /** Custom properties defined in the DSL (user-defined properties) */
   customProperties?: CustomPropertyValue[];
+
+  /** Optional parent zone/group ID if this node is contained within a zone */
+  parentId?: string;
 }
 
 /**

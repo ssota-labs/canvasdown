@@ -21,6 +21,9 @@ export interface GraphNode<TData = Record<string, unknown>> {
 
   /** Node data (merged defaultProperties + DSL properties) */
   data: TData;
+
+  /** Optional parent zone/group ID if this node is contained within a zone */
+  parentId?: string;
 }
 
 /**

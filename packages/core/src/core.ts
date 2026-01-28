@@ -18,13 +18,31 @@ import type {
 } from './types/index';
 
 /**
+ * Options for CanvasdownCore
+ */
+export interface CanvasdownCoreOptions {
+  /**
+   * Default extent for child nodes within zones/groups.
+   * - 'parent': Constrain to parent bounds
+   * - [[x1, y1], [x2, y2]]: Constrain to specific coordinate range
+   * - undefined: No constraint - nodes can move freely (default)
+   */
+  defaultExtent?: 'parent' | [[number, number], [number, number]] | undefined;
+}
+
+/**
  * Main Canvasdown Core class.
  * Provides a unified interface for DSL parsing, type registration, and graph generation.
  */
 export class CanvasdownCore {
   private blockRegistry = new BlockTypeRegistry();
   private edgeRegistry = new EdgeTypeRegistry();
-  private layout = new DagreLayout();
+  private layout = new DagreLayout(this.blockRegistry);
+  private options: CanvasdownCoreOptions;
+
+  constructor(options?: CanvasdownCoreOptions) {
+    this.options = options || {};
+  }
 
   /**
    * Register a block type definition
@@ -120,7 +138,11 @@ export class CanvasdownCore {
     const ast = cstToAST(cst);
 
     // Build graph data from AST
-    const builder = new GraphBuilder(this.blockRegistry, this.edgeRegistry);
+    const builder = new GraphBuilder(
+      this.blockRegistry,
+      this.edgeRegistry,
+      this.options
+    );
     const { nodes, edges } = builder.build(ast);
 
     // Apply layout
@@ -357,14 +379,20 @@ export class CanvasdownCore {
       schemaId: string;
       value: unknown;
     }>;
+    parentId?: string;
   }): {
     id: string;
     type: string;
     position: { x: number; y: number };
     size: { width: number; height: number };
     data: Record<string, unknown>;
+    parentId?: string;
   } {
-    const builder = new GraphBuilder(this.blockRegistry, this.edgeRegistry);
+    const builder = new GraphBuilder(
+      this.blockRegistry,
+      this.edgeRegistry,
+      this.options
+    );
     const tempAST = {
       direction: 'LR' as const,
       schemas: [],
@@ -375,6 +403,7 @@ export class CanvasdownCore {
           label: astNode.label,
           properties: astNode.properties || {},
           customProperties: astNode.customProperties,
+          parentId: astNode.parentId,
         },
       ],
       edges: [],
@@ -392,6 +421,7 @@ export class CanvasdownCore {
       position: graphNode.position,
       size: graphNode.size,
       data: graphNode.data,
+      parentId: graphNode.parentId,
     };
   }
 }

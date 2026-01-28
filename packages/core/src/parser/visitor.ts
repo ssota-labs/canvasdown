@@ -20,6 +20,10 @@ const BaseCstVisitor = parserInstance.getBaseCstVisitorConstructor();
  * Visitor that converts CST (Concrete Syntax Tree) to AST (Abstract Syntax Tree).
  */
 export class CanvasdownVisitor extends BaseCstVisitor {
+  // Accumulator for collecting all nodes and edges (including nested zone children)
+  private allNodes: ASTNode[] = [];
+  private allEdges: ASTEdge[] = [];
+
   constructor() {
     super();
     // Validate that all required methods are implemented
@@ -30,10 +34,12 @@ export class CanvasdownVisitor extends BaseCstVisitor {
    * Root visitor method
    */
   canvasdown(ctx: any): CanvasdownAST {
+    // Reset accumulators for each parse
+    this.allNodes = [];
+    this.allEdges = [];
+
     const direction = this.visit(ctx.canvasDeclaration) as Direction;
     const schemas: CustomPropertySchema[] = [];
-    const nodes: ASTNode[] = [];
-    const edges: ASTEdge[] = [];
 
     // Collect schemas first
     if (ctx.schemaDefinition) {
@@ -45,22 +51,29 @@ export class CanvasdownVisitor extends BaseCstVisitor {
       }
     }
 
-    // Collect nodes
+    // Collect zones (they will populate allNodes and allEdges with their children)
+    if (ctx.zoneDefinition) {
+      for (const zoneDef of ctx.zoneDefinition) {
+        this.visitZone(zoneDef, undefined);
+      }
+    }
+
+    // Collect root-level nodes (blocks not inside zones)
     if (ctx.blockDefinition) {
       for (const blockDef of ctx.blockDefinition) {
         const node = this.visit(blockDef) as ASTNode;
         if (node) {
-          nodes.push(node);
+          this.allNodes.push(node);
         }
       }
     }
 
-    // Collect edges
+    // Collect root-level edges
     if (ctx.edgeDefinition) {
       for (const edgeDef of ctx.edgeDefinition) {
         const edge = this.visit(edgeDef) as ASTEdge;
         if (edge) {
-          edges.push(edge);
+          this.allEdges.push(edge);
         }
       }
     }
@@ -68,9 +81,86 @@ export class CanvasdownVisitor extends BaseCstVisitor {
     return {
       direction,
       schemas,
-      nodes,
-      edges,
+      nodes: this.allNodes,
+      edges: this.allEdges,
     };
+  }
+
+  /**
+   * Visit a zone and its children, setting parentId on children
+   */
+  private visitZone(zoneCst: any, parentId: string | undefined): void {
+    const ctx = zoneCst.children;
+
+    const id = this.getTokenText(ctx.id[0]);
+
+    // Label is optional for zones - default to id
+    let label = id;
+    if (ctx.label && ctx.label[0]) {
+      const labelToken = ctx.label[0] as IToken;
+      label = this.unquoteString(labelToken.image);
+    }
+
+    let properties: Record<string, unknown> = {};
+    let customProperties: CustomPropertyValue[] = [];
+
+    if (ctx.properties) {
+      const result = this.visit(ctx.properties[0]) as {
+        properties: Record<string, unknown>;
+        customProperties: CustomPropertyValue[];
+      };
+      properties = result.properties;
+      customProperties = result.customProperties;
+    }
+
+    // Create zone node
+    const zoneNode: ASTNode = {
+      id,
+      type: 'zone',
+      label,
+      properties,
+      ...(customProperties.length > 0 && { customProperties }),
+      ...(parentId && { parentId }),
+    };
+
+    this.allNodes.push(zoneNode);
+
+    // Process nested zones
+    if (ctx.zoneDefinition) {
+      for (const nestedZoneDef of ctx.zoneDefinition) {
+        this.visitZone(nestedZoneDef, id);
+      }
+    }
+
+    // Process child blocks
+    if (ctx.blockDefinition) {
+      for (const blockDef of ctx.blockDefinition) {
+        const childNode = this.visit(blockDef) as ASTNode;
+        if (childNode) {
+          childNode.parentId = id;
+          this.allNodes.push(childNode);
+        }
+      }
+    }
+
+    // Process child edges
+    if (ctx.edgeDefinition) {
+      for (const edgeDef of ctx.edgeDefinition) {
+        const edge = this.visit(edgeDef) as ASTEdge;
+        if (edge) {
+          this.allEdges.push(edge);
+        }
+      }
+    }
+  }
+
+  /**
+   * Zone definition visitor (for compatibility with Chevrotain visitor pattern)
+   * Actual processing happens in visitZone to handle parentId
+   */
+  zoneDefinition(_ctx: any): void {
+    // This method is called by the base visitor but we handle zones specially
+    // via visitZone which is called from canvasdown
   }
 
   /**
@@ -134,13 +224,15 @@ export class CanvasdownVisitor extends BaseCstVisitor {
       customProperties = result.customProperties;
     }
 
-    return {
+    const node: ASTNode = {
       id,
       type: blockType,
       label,
       properties,
       ...(customProperties.length > 0 && { customProperties }),
     };
+
+    return node;
   }
 
   /**
@@ -382,7 +474,7 @@ export class CanvasdownVisitor extends BaseCstVisitor {
   }
 
   /**
-   * Visit value: string | number | boolean | identifier | array
+   * Visit value: string | number | boolean | direction | identifier | array
    */
   value(ctx: any): unknown {
     if (ctx.arrayLiteral) {
@@ -403,6 +495,11 @@ export class CanvasdownVisitor extends BaseCstVisitor {
     if (ctx.BooleanLiteral) {
       const token = ctx.BooleanLiteral[0] as IToken;
       return token.image === 'true';
+    }
+
+    if (ctx.Direction) {
+      const token = ctx.Direction[0] as IToken;
+      return token.image; // TB, LR, RL, BT
     }
 
     if (ctx.Identifier) {

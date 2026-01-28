@@ -95,6 +95,7 @@ One text block. One tool call. Entire canvas rendered.
 - **Custom Properties** — Define custom properties independent of block types (`@schema`, inline properties)
 - **Type Validation** — Optional runtime validation for block properties
 - **Property Schema** — Define property constraints (enum values, types, ranges) for validation and LLM template generation
+- **Zone/Group Support** — Create hierarchical structures with zones containing child nodes, each with its own layout direction
 
 ### Edge Features
 - **Edge Properties** — Define custom data on edges
@@ -142,7 +143,10 @@ npm install @xyflow/react react react-dom
 ```typescript
 import { CanvasdownCore } from '@ssota-labs/canvasdown';
 
-const core = new CanvasdownCore();
+// Create core with optional configuration
+const core = new CanvasdownCore({
+  defaultExtent: 'parent', // Optional: constrain zone children to parent bounds
+});
 
 // Register block types with default properties and sizes
 core.registerBlockType({
@@ -168,6 +172,18 @@ core.registerBlockType({
   defaultProperties: { content: '', theme: 'light' },
   defaultSize: { width: 300, height: 150 },
 });
+
+// Register zone type (group node)
+core.registerBlockType({
+  name: 'zone',
+  isGroup: true, // Mark as group node
+  defaultProperties: { 
+    direction: 'TB', // Default direction for children
+    color: 'gray',
+    padding: 20 
+  },
+  defaultSize: { width: 400, height: 300 },
+});
 ```
 
 ### 2. Parse and Layout DSL
@@ -184,8 +200,36 @@ start -> process : "begins"
 process -> end : "completes"
 `;
 
+// Or with zones (groups)
+const dslWithZones = `
+canvas TB
+
+@zone thesis "Core Thesis" {
+  direction: TB,
+  color: blue
+}
+  @shape main_thesis "Video's Main Argument" {
+    shapeType: ellipse,
+    color: blue
+  }
+@end
+
+@zone claims "Supporting Claims" {
+  direction: LR,
+  color: green
+}
+  @shape claim1 "Claim 1" { shapeType: rectangle, color: green }
+  @shape claim2 "Claim 2" { shapeType: rectangle, color: green }
+  @shape claim3 "Claim 3" { shapeType: rectangle, color: green }
+@end
+
+main_thesis -> claim1 : "supports"
+claim1 -> claim2
+claim2 -> claim3
+`;
+
 const result = core.parseAndLayout(dsl);
-// result.nodes - positioned graph nodes
+// result.nodes - positioned graph nodes (including zones and children)
 // result.edges - graph edges
 ```
 
@@ -274,6 +318,33 @@ source -> target : "label" {               // Label + properties
   style: { stroke: "#ff0000" }
 }
 ```
+
+### Zone Definition (Groups)
+
+Create hierarchical structures with zones that contain child nodes:
+
+```
+@zone zoneId "Zone Label" {
+  direction: LR,        // Layout direction for children (LR, RL, TB, BT)
+  color: blue,          // Custom properties
+  padding: 20           // Padding around children
+}
+  @shape child1 "Child 1" { color: green }
+  @shape child2 "Child 2" { color: green }
+  @shape child3 "Child 3" { color: green }
+@end
+
+// Edges can connect nodes inside and outside zones
+child1 -> child2
+child2 -> externalNode
+```
+
+**Zone Features:**
+- **Hierarchical Structure** — Zones can contain other blocks, creating nested groups
+- **Independent Layout Direction** — Each zone can have its own `direction` (LR, RL, TB, BT)
+- **Child Positioning** — Children are automatically positioned relative to their parent zone
+- **React Flow Group Nodes** — Zones map to React Flow group nodes with `parentId` and `extent` support
+- **Configurable Extent** — Control whether children are constrained within zone boundaries via `defaultExtent` option
 
 ### Patch Commands
 
@@ -565,6 +636,7 @@ function KanbanCard({ data }: NodeProps) {
 - [x] Patch DSL for incremental updates
 - [x] Edge labels and source/target labels
 - [x] Custom properties support (`@schema`, inline properties)
+- [x] Zone/Group support with hierarchical layouts and independent directions
 
 ### 🚧 In Progress
 - [ ] **Streaming Parser** — Parse DSL as it streams from LLM, enabling real-time rendering during generation
@@ -572,7 +644,6 @@ function KanbanCard({ data }: NodeProps) {
 
 ### 📋 Planned
 - [ ] elkjs layout support
-- [ ] Subgraph/grouping support
 - [ ] Bidirectional sync (Canvas → DSL)
 - [ ] VS Code extension with syntax highlighting
 - [ ] Monaco Editor integration with autocomplete

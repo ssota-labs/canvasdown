@@ -176,13 +176,27 @@ function applyAddOperation(
     throw new Error(`Node "${operation.targetId}" already exists`);
   }
 
+  // Extract zone from properties if present
+  const properties = { ...operation.properties };
+  const zoneId = properties.zone as string | undefined;
+  if (zoneId) {
+    // Remove zone from properties (it's not a regular property)
+    delete properties.zone;
+    // Validate that zone exists
+    if (!stateManager.hasNode(nodes, zoneId)) {
+      throw new Error(
+        `Zone "${zoneId}" not found for node "${operation.targetId}"`
+      );
+    }
+  }
+
   // Use core's buildNodeFromAST to create the node
   // Convert customProperties from { key, value } to { schemaId, value } format
   const graphNode = options.core.buildNodeFromAST({
     id: operation.targetId,
     type: operation.nodeType,
     label: operation.label,
-    properties: operation.properties,
+    properties: Object.keys(properties).length > 0 ? properties : undefined,
     customProperties: operation.customProperties
       ? operation.customProperties.map(
           (cp: { key: string; value: unknown }) => ({
@@ -191,6 +205,7 @@ function applyAddOperation(
           })
         )
       : undefined,
+    parentId: zoneId,
   });
 
   // Convert to React Flow node
@@ -206,6 +221,22 @@ function applyAddOperation(
     width: graphNode.size.width,
     height: graphNode.size.height,
   };
+
+  // Add parentId and extent for zone children
+  if (graphNode.parentId) {
+    reactFlowNode.parentId = graphNode.parentId;
+    // Use extent from data if provided
+    // If extent is not set in data, leave it undefined (no constraint)
+    const extent = (
+      graphNode.data as {
+        extent?: 'parent' | [[number, number], [number, number]] | null;
+      }
+    )?.extent;
+    if (extent !== undefined && extent !== null) {
+      reactFlowNode.extent = extent;
+    }
+    // If extent is undefined/null, React Flow will not constrain the node
+  }
 
   return [...nodes, reactFlowNode];
 }

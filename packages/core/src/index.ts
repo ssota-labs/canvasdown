@@ -2,7 +2,7 @@
 export * from './types/index';
 
 // Core class
-export { CanvasdownCore } from './core';
+export { CanvasdownCore, type CanvasdownCoreOptions } from './core';
 
 // Parser
 export * from './parser/index';

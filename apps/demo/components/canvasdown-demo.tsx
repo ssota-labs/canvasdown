@@ -1,7 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CanvasdownCore, type CanvasdownOutput } from '@ssota-labs/canvasdown';
+import {
+  CanvasdownCore,
+  type CanvasdownCoreOptions,
+  type CanvasdownOutput,
+} from '@ssota-labs/canvasdown';
 import {
   toReactFlowEdges,
   toReactFlowNodes,
@@ -34,7 +38,10 @@ export function CanvasdownDemo({ dsl, onDslChange }: CanvasdownDemoProps) {
 
   // Initialize core and register block types
   const core = useMemo(() => {
-    const c = new CanvasdownCore();
+    const options: CanvasdownCoreOptions = {
+      defaultExtent: 'parent', // Constrain zone children to parent bounds by default
+    };
+    const c = new CanvasdownCore(options);
     registerBlockTypes(c);
     return c;
   }, []);
@@ -43,8 +50,10 @@ export function CanvasdownDemo({ dsl, onDslChange }: CanvasdownDemoProps) {
   const { nodes, edges, parseError, rawResult } = useMemo(() => {
     try {
       const result = core.parseAndLayout(dsl);
+      const reactFlowNodes = toReactFlowNodes(result.nodes);
+
       return {
-        nodes: toReactFlowNodes(result.nodes),
+        nodes: reactFlowNodes,
         edges: toReactFlowEdges(result.edges, result.metadata.direction),
         parseError: null,
         rawResult: result,

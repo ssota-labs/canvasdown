@@ -2,7 +2,9 @@ import { CstParser, type CstNode } from 'chevrotain';
 import {
   allTokens,
   Arrow,
+  AtEnd,
   AtSign,
+  AtZone,
   BooleanLiteral,
   Canvas,
   Colon,
@@ -38,13 +40,14 @@ export class CanvasdownParser extends CstParser {
   }
 
   /**
-   * Root rule: canvas declaration followed by schema/block/edge definitions
+   * Root rule: canvas declaration followed by schema/block/edge/zone definitions
    */
   canvasdown = this.RULE('canvasdown', () => {
     this.SUBRULE(this.canvasDeclaration);
     this.MANY(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.schemaDefinition) },
+        { ALT: () => this.SUBRULE(this.zoneDefinition) },
         { ALT: () => this.SUBRULE(this.blockDefinition) },
         { ALT: () => this.SUBRULE(this.edgeDefinition) },
       ]);
@@ -67,6 +70,30 @@ export class CanvasdownParser extends CstParser {
     this.CONSUME(Schema);
     this.CONSUME(Identifier, { LABEL: 'id' });
     this.SUBRULE(this.properties);
+  });
+
+  /**
+   * Zone definition: @zone id "label"? { properties }? ...children... @end
+   * Zones can contain blocks, edges, and nested zones
+   */
+  zoneDefinition = this.RULE('zoneDefinition', () => {
+    this.CONSUME(AtZone); // Single token for @zone
+    this.CONSUME(Identifier, { LABEL: 'id' });
+    this.OPTION1(() => {
+      this.CONSUME(StringLiteral, { LABEL: 'label' });
+    });
+    this.OPTION2(() => {
+      this.SUBRULE(this.properties);
+    });
+    // Zone children: blocks, edges, or nested zones
+    this.MANY(() => {
+      this.OR2([
+        { ALT: () => this.SUBRULE2(this.zoneDefinition) },
+        { ALT: () => this.SUBRULE(this.blockDefinition) },
+        { ALT: () => this.SUBRULE(this.edgeDefinition) },
+      ]);
+    });
+    this.CONSUME(AtEnd);
   });
 
   /**
@@ -164,7 +191,7 @@ export class CanvasdownParser extends CstParser {
   });
 
   /**
-   * Value: string | number | boolean | identifier | array
+   * Value: string | number | boolean | direction | identifier | array
    */
   value = this.RULE('value', () => {
     this.OR([
@@ -172,6 +199,7 @@ export class CanvasdownParser extends CstParser {
       { ALT: () => this.CONSUME(StringLiteral) },
       { ALT: () => this.CONSUME(NumberLiteral) },
       { ALT: () => this.CONSUME(BooleanLiteral) },
+      { ALT: () => this.CONSUME(Direction) }, // Allow TB, LR, etc. as values
       { ALT: () => this.CONSUME(Identifier) },
     ]);
   });

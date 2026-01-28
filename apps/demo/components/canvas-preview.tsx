@@ -18,6 +18,7 @@ import { ImageBlock } from './blocks/image-block';
 import { MarkdownBlock } from './blocks/markdown-block';
 import { ShapeBlock } from './blocks/shape-block';
 import { YouTubeBlock } from './blocks/youtube-block';
+import { ZoneBlock } from './blocks/zone-block';
 
 interface CanvasPreviewProps {
   error: string | null;
@@ -30,6 +31,7 @@ const nodeTypes = {
   shape: ShapeBlock,
   image: ImageBlock,
   youtube: YouTubeBlock,
+  zone: ZoneBlock,
 };
 
 const edgeTypes = {

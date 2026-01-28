@@ -1,3 +1,4 @@
+import type { CanvasdownCoreOptions } from '../core';
 import { BlockTypeRegistry } from '../registry/block-type-registry';
 import { EdgeTypeRegistry } from '../registry/edge-type-registry';
 import type { ASTEdge, ASTNode, CanvasdownAST } from '../types/ast.types';
@@ -16,7 +17,8 @@ import type { GraphEdge, GraphNode } from '../types/graph.types';
 export class GraphBuilder {
   constructor(
     private blockRegistry: BlockTypeRegistry,
-    private edgeRegistry: EdgeTypeRegistry
+    private edgeRegistry: EdgeTypeRegistry,
+    private options?: CanvasdownCoreOptions
   ) {}
 
   /**
@@ -38,7 +40,39 @@ export class GraphBuilder {
     const nodes = ast.nodes.map(n => this.buildNode(n, schemaMap));
     const edges = ast.edges.map((e, index) => this.buildEdge(e, index));
 
+    // Validate parent-child relationships
+    this.validateParentChildRelationships(nodes);
+
     return { nodes, edges };
+  }
+
+  /**
+   * Validate that parent nodes exist and are group types
+   */
+  private validateParentChildRelationships(nodes: GraphNode[]): void {
+    const nodeMap = new Map<string, GraphNode>();
+    for (const node of nodes) {
+      nodeMap.set(node.id, node);
+    }
+
+    for (const node of nodes) {
+      if (node.parentId) {
+        const parent = nodeMap.get(node.parentId);
+        if (!parent) {
+          throw new Error(
+            `Node '${node.id}' references non-existent parent '${node.parentId}'`
+          );
+        }
+
+        // Check if parent is a group type
+        const parentTypeDef = this.blockRegistry.get(parent.type);
+        if (!parentTypeDef || !parentTypeDef.isGroup) {
+          throw new Error(
+            `Node '${node.id}' has parent '${node.parentId}' which is not a group type (type: '${parent.type}')`
+          );
+        }
+      }
+    }
   }
 
   /**
@@ -126,13 +160,25 @@ export class GraphBuilder {
       ...(customProperties.length > 0 && { customProperties }),
     };
 
-    return {
+    const graphNode: GraphNode = {
       id: astNode.id,
       type: astNode.type,
       position: { x: 0, y: 0 }, // Will be calculated by layout engine
       size: typeDef.defaultSize,
       data,
     };
+
+    // Preserve parentId if present
+    if (astNode.parentId) {
+      graphNode.parentId = astNode.parentId;
+      // Apply default extent if not explicitly set in DSL properties
+      // DSL properties take precedence over defaultExtent option
+      if (!data.extent && this.options?.defaultExtent !== undefined) {
+        data.extent = this.options.defaultExtent;
+      }
+    }
+
+    return graphNode;
   }
 
   /**
