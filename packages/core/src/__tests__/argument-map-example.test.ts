@@ -207,22 +207,24 @@ canvas TB
     expect(tbZone).toBeDefined();
 
     // In LR zone, b should be to the right of a
+    // Note: children positions are relative to parent zone
     if (a && b && lrZone) {
       expect(b.position.x).toBeGreaterThan(a.position.x);
-      // Both should be within zone bounds
-      expect(a.position.x).toBeGreaterThanOrEqual(lrZone.position.x);
+      // Both should be within zone bounds (relative positions)
+      expect(a.position.x).toBeGreaterThanOrEqual(0);
       expect(b.position.x + b.size.width).toBeLessThanOrEqual(
-        lrZone.position.x + lrZone.size.width
+        lrZone.size.width
       );
     }
 
     // In TB zone, d should be below c
+    // Note: children positions are relative to parent zone
     if (c && d && tbZone) {
       expect(d.position.y).toBeGreaterThan(c.position.y);
-      // Both should be within zone bounds
-      expect(c.position.y).toBeGreaterThanOrEqual(tbZone.position.y);
+      // Both should be within zone bounds (relative positions)
+      expect(c.position.y).toBeGreaterThanOrEqual(0);
       expect(d.position.y + d.size.height).toBeLessThanOrEqual(
-        tbZone.position.y + tbZone.size.height
+        tbZone.size.height
       );
     }
   });

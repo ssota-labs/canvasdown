@@ -63,7 +63,6 @@ const colorMap: Record<string, { bg: string; border: string; text: string }> = {
  * React Flow의 Parent-Child 관계를 활용하여 자식 노드들을 포함
  */
 export const ZoneBlock = memo(function ZoneBlock({
-  id,
   data,
   selected,
 }: NodeProps) {
