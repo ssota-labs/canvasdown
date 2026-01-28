@@ -29,8 +29,11 @@ npm install @ssota-labs/canvasdown
 ```typescript
 import { CanvasdownCore } from '@ssota-labs/canvasdown';
 
-// 1. Create core instance
-const core = new CanvasdownCore();
+// 1. Create core instance with optional configuration
+const core = new CanvasdownCore({
+  defaultExtent: 'parent', // Optional: constrain zone children to parent bounds
+  // Set to undefined to allow free movement of children
+});
 
 // 2. Register block types
 core.registerBlockType({
@@ -45,6 +48,18 @@ core.registerBlockType({
   defaultSize: { width: 300, height: 150 },
 });
 
+// Register zone type (group node)
+core.registerBlockType({
+  name: 'zone',
+  isGroup: true, // Mark as group node
+  defaultProperties: { 
+    direction: 'TB', // Default direction for children
+    color: 'gray',
+    padding: 20 
+  },
+  defaultSize: { width: 400, height: 300 },
+});
+
 // 3. Parse and layout DSL
 const dsl = `
 canvas LR
@@ -57,9 +72,35 @@ start -> process : "begins"
 process -> end : "completes"
 `;
 
+// Or with zones
+const dslWithZones = `
+canvas TB
+
+@zone thesis "Core Thesis" {
+  direction: TB,
+  color: blue
+}
+  @shape main_thesis "Video's Main Argument" {
+    shapeType: ellipse,
+    color: blue
+  }
+@end
+
+@zone claims "Supporting Claims" {
+  direction: LR,
+  color: green
+}
+  @shape claim1 "Claim 1" { shapeType: rectangle, color: green }
+  @shape claim2 "Claim 2" { shapeType: rectangle, color: green }
+@end
+
+main_thesis -> claim1 : "supports"
+claim1 -> claim2
+`;
+
 const result = core.parseAndLayout(dsl);
 
-// result.nodes - Array of positioned graph nodes
+// result.nodes - Array of positioned graph nodes (including zones and children)
 // result.edges - Array of graph edges
 // result.metadata - Layout metadata (direction, engine, etc.)
 ```
@@ -96,7 +137,26 @@ core.registerBlockType({
     },
   },
 });
+
+// Register zone type (group node)
+core.registerBlockType({
+  name: 'zone',
+  isGroup: true, // Mark as group node - children will have parentId
+  defaultProperties: {
+    direction: 'TB', // Layout direction for children (LR, RL, TB, BT)
+    color: 'gray',
+    padding: 20,     // Padding around children
+  },
+  defaultSize: { width: 400, height: 300 },
+});
 ```
+
+**Zone/Group Notes:**
+- Set `isGroup: true` to mark a block type as a zone/group
+- Zones can contain child blocks using `@zone ... @end` syntax
+- Each zone can have its own `direction` property for child layout
+- Children automatically get `parentId` set to the zone's ID
+- Use `defaultExtent` option in `CanvasdownCore` constructor to control child positioning constraints
 
 ### Edge Type Registration
 
@@ -140,6 +200,51 @@ const dsl2 = `
 `;
 ```
 
+### Zone/Group Syntax
+
+Create hierarchical structures with zones:
+
+```typescript
+const dsl = `
+canvas TB
+
+@zone zone1 "Zone 1" {
+  direction: LR,  // Children layout direction
+  color: blue,
+  padding: 20
+}
+  @shape child1 "Child 1" { color: green }
+  @shape child2 "Child 2" { color: green }
+  @shape child3 "Child 3" { color: green }
+@end
+
+@zone zone2 "Zone 2" {
+  direction: TB,
+  color: red
+}
+  @shape child4 "Child 4" { color: orange }
+  @shape child5 "Child 5" { color: orange }
+@end
+
+// Edges can connect nodes inside and outside zones
+child1 -> child2
+child2 -> child4
+child4 -> child5
+`;
+
+const result = core.parseAndLayout(dsl);
+// result.nodes includes:
+// - zone1 and zone2 (with isGroup: true)
+// - child1, child2, child3 (with parentId: "zone1")
+// - child4, child5 (with parentId: "zone2")
+```
+
+**Zone Features:**
+- **Nested Structure**: Zones can contain any blocks, including other zones
+- **Independent Direction**: Each zone can have its own `direction` (LR, RL, TB, BT)
+- **Automatic Layout**: Children are automatically positioned within their parent zone
+- **Child Constraints**: Use `defaultExtent: 'parent'` option to constrain children within zone boundaries
+
 ### Patch DSL
 
 Update diagrams incrementally without regenerating the entire diagram:
@@ -173,6 +278,24 @@ const patchedResult = core.parseAndLayout(patchDsl, {
 ### `CanvasdownCore`
 
 Main class for parsing and layout.
+
+#### Constructor
+
+```typescript
+const core = new CanvasdownCore(options?: CanvasdownCoreOptions);
+```
+
+**Options:**
+```typescript
+interface CanvasdownCoreOptions {
+  defaultExtent?: 'parent' | [[number, number], [number, number]] | null;
+}
+```
+
+- `defaultExtent`: Controls default positioning constraint for zone children
+  - `'parent'`: Constrain children within parent zone boundaries (default for React Flow group nodes)
+  - `undefined` or `null`: Allow free movement of children
+  - Custom extent: `[[minX, minY], [maxX, maxY]]` for custom boundaries
 
 #### Methods
 
@@ -223,6 +346,8 @@ const result = core.parseAndLayout(dsl, {
 });
 ```
 
+**Note**: For zone children, positions are calculated relative to their parent zone. React Flow adapters automatically handle `parentId` and `extent` properties.
+
 Returns:
 ```typescript
 {
@@ -253,6 +378,16 @@ const laidOut = core.layout(graph, 'LR');
 
 ## Type Definitions
 
+### `CanvasdownCoreOptions`
+
+```typescript
+interface CanvasdownCoreOptions {
+  defaultExtent?: 'parent' | [[number, number], [number, number]] | null;
+}
+```
+
+Controls default behavior for zone children positioning.
+
 ### `BlockTypeDefinition`
 
 ```typescript
@@ -260,10 +395,17 @@ interface BlockTypeDefinition<TProps = Record<string, unknown>> {
   name: string;
   defaultProperties: TProps;
   defaultSize: { width: number; height: number };
+  isGroup?: boolean; // Set to true for zone/group nodes
   validate?: (props: TProps) => boolean;
   propertySchema?: Record<string, PropertySchema>;
 }
 ```
+
+**`isGroup` Property:**
+- Set `isGroup: true` to mark a block type as a zone/group
+- Group nodes can contain child nodes (via `@zone ... @end` syntax)
+- Children automatically get `parentId` set to the group's ID
+- React Flow adapters will render these as group nodes
 
 ### `PropertySchema`
 
@@ -299,9 +441,22 @@ interface GraphNode<TNodeData = Record<string, unknown>> {
   type: string;
   position: { x: number; y: number };
   size: { width: number; height: number };
-  data: TNodeData;
+  parentId?: string; // Set for children of zones/groups
+  data: TNodeData & {
+    extent?: 'parent' | [[number, number], [number, number]] | null;
+  };
 }
 ```
+
+**`parentId` Property:**
+- Automatically set for children of zones/groups
+- Position is relative to parent zone when `parentId` is present
+- React Flow adapters use this to render group nodes
+
+**`data.extent` Property:**
+- Controls whether child nodes are constrained within parent boundaries
+- Set via `defaultExtent` option in `CanvasdownCore` constructor
+- Can be overridden per-node in DSL using `extent` property
 
 ### `GraphEdge`
 
@@ -368,6 +523,57 @@ decision -> process : "No"
 `;
 
 const result = core.parseAndLayout(dsl);
+```
+
+### With Zones (Groups)
+
+```typescript
+const dsl = `
+canvas TB
+
+@zone thesis "Core Thesis" {
+  direction: TB,
+  color: blue
+}
+  @shape main_thesis "Video's Main Argument" {
+    shapeType: ellipse,
+    color: blue
+  }
+@end
+
+@zone claims "Supporting Claims" {
+  direction: LR,
+  color: green
+}
+  @shape claim1 "Claim 1" { shapeType: rectangle, color: green }
+  @shape claim2 "Claim 2" { shapeType: rectangle, color: green }
+  @shape claim3 "Claim 3" { shapeType: rectangle, color: green }
+@end
+
+@zone evidence "Evidence" {
+  direction: TB,
+  color: gray
+}
+  @shape ev1 "Evidence 1" {
+    shapeType: rectangle,
+    borderStyle: dashed,
+    color: gray
+  }
+  @shape ev2 "Evidence 2" {
+    shapeType: rectangle,
+    borderStyle: dashed,
+    color: gray
+  }
+@end
+
+main_thesis -> claim1 : "supports"
+main_thesis -> claim2 : "supports"
+claim1 -> ev1 : "based on"
+claim2 -> ev2 : "based on"
+`;
+
+const result = core.parseAndLayout(dsl);
+// Zones and children are automatically laid out with multi-pass layout
 ```
 
 ### With Custom Properties

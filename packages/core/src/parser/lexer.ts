@@ -58,6 +58,17 @@ export const Direction = createToken({
   pattern: /LR|RL|TB|BT/,
 });
 
+// Zone markers (must come before AtSign to match first)
+export const AtZone = createToken({
+  name: 'AtZone',
+  pattern: /@zone/,
+});
+
+export const AtEnd = createToken({
+  name: 'AtEnd',
+  pattern: /@end/,
+});
+
 // Operators and punctuation
 export const AtSign = createToken({
   name: 'AtSign',
@@ -165,6 +176,8 @@ export const allTokens = [
   PatchMove,
   PatchResize,
   Direction,
+  AtZone, // Must come before AtSign
+  AtEnd, // Must come before AtSign
   AtSign,
   DollarSign,
   Arrow,

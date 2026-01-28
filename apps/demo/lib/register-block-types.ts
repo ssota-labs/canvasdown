@@ -3,7 +3,7 @@ import { CanvasdownCore } from '@ssota-labs/canvasdown';
 /**
  * Register SSOTA block types with Canvasdown Core
  */
-export function registerBlockTypes(core: CanvasdownCore) {
+export function registerBlockTypes(core: InstanceType<typeof CanvasdownCore>) {
   // Shape block type
   core.registerBlockType({
     name: 'shape',
@@ -111,6 +111,50 @@ export function registerBlockTypes(core: CanvasdownCore) {
       videoId: {
         type: 'string',
         description: 'YouTube video ID',
+      },
+    },
+  });
+
+  // Zone block type (group/container)
+  core.registerBlockType({
+    name: 'zone',
+    isGroup: true, // Mark as group type
+    defaultProperties: {
+      direction: 'TB',
+      color: 'gray',
+      padding: 20,
+      label: '',
+      collapsed: false,
+    },
+    defaultSize: { width: 400, height: 300 },
+    propertySchema: {
+      direction: {
+        type: 'enum',
+        enum: ['TB', 'LR', 'RL', 'BT'],
+        description: 'Layout direction within the zone',
+      },
+      color: {
+        type: 'enum',
+        enum: [
+          'red',
+          'orange',
+          'amber',
+          'green',
+          'blue',
+          'purple',
+          'pink',
+          'gray',
+        ],
+        description: 'Zone background/border color',
+      },
+      padding: {
+        type: 'number',
+        min: 0,
+        description: 'Internal padding for the zone',
+      },
+      collapsed: {
+        type: 'boolean',
+        description: 'Whether the zone is collapsed',
       },
     },
   });

@@ -5,17 +5,37 @@ import type { Edge, Node } from '@xyflow/react';
  * Convert Canvasdown GraphNode to React Flow Node
  */
 export function toReactFlowNodes(graphNodes: GraphNode[]): Node[] {
-  return graphNodes.map(node => ({
-    id: node.id,
-    type: node.type,
-    position: node.position,
-    data: {
-      ...node.data,
-      title: node.data.title || node.id,
-    },
-    width: node.size.width,
-    height: node.size.height,
-  }));
+  return graphNodes.map(node => {
+    const reactFlowNode: Node = {
+      id: node.id,
+      type: node.type,
+      position: node.position,
+      data: {
+        ...node.data,
+        title: node.data.title || node.id,
+      },
+      width: node.size.width,
+      height: node.size.height,
+    };
+
+    // Add parentId for group nodes (children of zones)
+    if (node.parentId) {
+      reactFlowNode.parentId = node.parentId;
+      // Use extent from data if provided
+      // If extent is not set in data, leave it undefined (no constraint)
+      const extent = (
+        node.data as {
+          extent?: 'parent' | [[number, number], [number, number]] | null;
+        }
+      )?.extent;
+      if (extent !== undefined && extent !== null) {
+        reactFlowNode.extent = extent;
+      }
+      // If extent is undefined/null, React Flow will not constrain the node
+    }
+
+    return reactFlowNode;
+  });
 }
 
 /**

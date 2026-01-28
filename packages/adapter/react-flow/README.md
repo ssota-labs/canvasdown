@@ -29,19 +29,36 @@ import { ReactFlow } from '@xyflow/react';
 import { CanvasdownCore } from '@ssota-labs/canvasdown';
 import { ShapeBlock } from './components/ShapeBlock';
 import { MarkdownBlock } from './components/MarkdownBlock';
+import { ZoneBlock } from './components/ZoneBlock';
 
 // 1. Set up core with block types
-const core = new CanvasdownCore();
+const core = new CanvasdownCore({
+  defaultExtent: 'parent', // Optional: constrain zone children to parent bounds
+});
+
 core.registerBlockType({
   name: 'shape',
   defaultProperties: { shapeType: 'rectangle', color: 'blue' },
   defaultSize: { width: 200, height: 100 },
 });
 
+// Register zone type (group node)
+core.registerBlockType({
+  name: 'zone',
+  isGroup: true, // Mark as group node
+  defaultProperties: { 
+    direction: 'TB',
+    color: 'gray',
+    padding: 20 
+  },
+  defaultSize: { width: 400, height: 300 },
+});
+
 // 2. Map block types to your React components
 const nodeTypes = {
   shape: ShapeBlock,
   markdown: MarkdownBlock,
+  zone: ZoneBlock, // Group node component
 };
 
 function MyCanvas() {
@@ -54,7 +71,29 @@ function MyCanvas() {
     start -> content
   `;
 
-  const { nodes, edges, error } = useCanvasdown(dsl, { core });
+  // Or with zones
+  const dslWithZones = `
+    canvas TB
+    
+    @zone thesis "Core Thesis" {
+      direction: TB,
+      color: blue
+    }
+      @shape main_thesis "Main Argument" { shapeType: ellipse, color: blue }
+    @end
+    
+    @zone claims "Supporting Claims" {
+      direction: LR,
+      color: green
+    }
+      @shape claim1 "Claim 1" { shapeType: rectangle, color: green }
+      @shape claim2 "Claim 2" { shapeType: rectangle, color: green }
+    @end
+    
+    main_thesis -> claim1
+  `;
+
+  const { nodes, edges, error } = useCanvasdown(dslWithZones, { core });
 
   if (error) {
     return <div>Error: {error.message}</div>;
@@ -81,6 +120,7 @@ function MyCanvas() {
 - **Custom Edge Component** — `CustomEdge` with label support
 - **State Management** — `CanvasStateManager` for advanced use cases
 - **Type Safety** — Full TypeScript support
+- **Zone/Group Support** — Automatic conversion of zones to React Flow group nodes with `parentId` and `extent`
 
 ## Hooks
 
@@ -257,6 +297,56 @@ const nodeTypes = {
 };
 ```
 
+### Zone/Group Nodes
+
+Zones are automatically converted to React Flow group nodes. Create a group node component:
+
+```tsx
+import { NodeProps } from '@xyflow/react';
+import { Handle, Position } from '@xyflow/react';
+
+function ZoneBlock({ data, selected }: NodeProps) {
+  const { label, color, padding } = data;
+  
+  return (
+    <div
+      style={{
+        border: `2px solid ${color}`,
+        borderRadius: '8px',
+        padding: `${padding}px`,
+        backgroundColor: `${color}20`,
+        minWidth: '200px',
+        minHeight: '100px',
+      }}
+    >
+      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+        {label}
+      </div>
+      {/* Children will be rendered inside this group */}
+    </div>
+  );
+}
+
+// Register zone type
+core.registerBlockType({
+  name: 'zone',
+  isGroup: true,
+  defaultProperties: { direction: 'TB', color: 'gray', padding: 20 },
+  defaultSize: { width: 400, height: 300 },
+});
+
+const nodeTypes = {
+  zone: ZoneBlock,
+};
+```
+
+**Zone Features:**
+- Children automatically get `parentId` set to the zone's ID
+- `extent` property controls whether children are constrained within zone boundaries
+- Set `defaultExtent: 'parent'` in `CanvasdownCore` constructor to constrain all zone children
+- Or set `extent: 'parent'` per-node in DSL to override default
+- Set `extent: undefined` or omit it to allow free movement of children
+
 ## Patch Operations
 
 Supported Patch DSL commands:
@@ -305,6 +395,63 @@ function Flowchart() {
   const { nodes, edges } = useCanvasdown(dsl, { core });
 
   return <ReactFlow nodes={nodes} edges={edges} />;
+}
+```
+
+### With Zones (Groups)
+
+```tsx
+function ZoneCanvas() {
+  const core = new CanvasdownCore({
+    defaultExtent: 'parent', // Constrain zone children
+  });
+  
+  core.registerBlockType({
+    name: 'zone',
+    isGroup: true,
+    defaultProperties: { direction: 'TB', color: 'gray', padding: 20 },
+    defaultSize: { width: 400, height: 300 },
+  });
+  
+  const dsl = `
+    canvas TB
+    
+    @zone thesis "Core Thesis" {
+      direction: TB,
+      color: blue
+    }
+      @shape main_thesis "Main Argument" { shapeType: ellipse, color: blue }
+    @end
+    
+    @zone claims "Supporting Claims" {
+      direction: LR,
+      color: green
+    }
+      @shape claim1 "Claim 1" { shapeType: rectangle, color: green }
+      @shape claim2 "Claim 2" { shapeType: rectangle, color: green }
+      @shape claim3 "Claim 3" { shapeType: rectangle, color: green }
+    @end
+    
+    main_thesis -> claim1 : "supports"
+    claim1 -> claim2
+    claim2 -> claim3
+  `;
+
+  const { nodes, edges } = useCanvasdown(dsl, { core });
+  
+  const nodeTypes = {
+    shape: ShapeBlock,
+    zone: ZoneBlock,
+  };
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      nodeTypes={nodeTypes}
+      fitView
+    />
+  );
 }
 ```
 

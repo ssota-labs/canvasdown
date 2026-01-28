@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CanvasdownCore } from '@ssota-labs/canvasdown';
+import {
+  CanvasdownCore,
+  type CanvasdownCoreOptions,
+} from '@ssota-labs/canvasdown';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +17,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate DSL
-    const core = new CanvasdownCore();
+    const options: CanvasdownCoreOptions = {
+      defaultExtent: 'parent', // Constrain zone children to parent bounds by default
+    };
+    const core = new CanvasdownCore(options);
     const result = core.parseAndLayout(dsl);
 
     // Return parsed data

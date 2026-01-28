@@ -41,4 +41,7 @@ export interface BlockTypeDefinition<TProps = Record<string, unknown>> {
 
   /** Optional property schema for validation and template generation */
   propertySchema?: Record<string, PropertySchema>;
+
+  /** Whether this block type is a group/zone that can contain other blocks */
+  isGroup?: boolean;
 }
