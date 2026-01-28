@@ -14,25 +14,13 @@ import {
 import type { Edge, Node } from '@xyflow/react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
-import { ImageBlock } from './blocks/image-block';
-import { MarkdownBlock } from './blocks/markdown-block';
-import { ShapeBlock } from './blocks/shape-block';
-import { YouTubeBlock } from './blocks/youtube-block';
-import { ZoneBlock } from './blocks/zone-block';
+import { CANVAS_NODE_TYPES } from '@/lib/node-types';
 
 interface CanvasPreviewProps {
   error: string | null;
   initialNodes?: Node[];
   initialEdges?: Edge[];
 }
-
-const nodeTypes = {
-  markdown: MarkdownBlock,
-  shape: ShapeBlock,
-  image: ImageBlock,
-  youtube: YouTubeBlock,
-  zone: ZoneBlock,
-};
 
 const edgeTypes = {
   default: CustomEdge,
@@ -100,7 +88,7 @@ export function CanvasPreview({
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        nodeTypes={nodeTypes}
+        nodeTypes={CANVAS_NODE_TYPES}
         edgeTypes={edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
