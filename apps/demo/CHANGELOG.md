@@ -1,5 +1,25 @@
 # demo
 
+## 0.3.2
+
+### Patch Changes
+
+- cab8c44: Add zone/group support for hierarchical canvas structures.
+
+  **Features:**
+
+  - Zone syntax (`@zone ... @end`) for creating nested group structures
+  - Independent layout directions per zone (LR, RL, TB, BT)
+  - Multi-pass layout algorithm for hierarchical positioning
+  - Automatic `parentId` assignment for zone children
+  - `isGroup` flag for block type registration
+  - `defaultExtent` option in `CanvasdownCore` to control child positioning constraints
+  - React Flow group node integration with automatic `parentId` and `extent` handling
+
+- Updated dependencies [cab8c44]
+  - @ssota-labs/canvasdown@0.4.0
+  - @ssota-labs/canvasdown-reactflow@0.4.0
+
 ## 0.3.1
 
 ### Patch Changes
