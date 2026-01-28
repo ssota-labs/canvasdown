@@ -10,6 +10,7 @@ import type {
   CustomPropertyValue,
 } from '../types/custom-property.types';
 import { CustomPropertyType } from '../types/custom-property.types';
+import type { MarkerConfig } from '../types/edge-type.types';
 import { CanvasdownParser } from './parser';
 
 // Get the base visitor class from the parser instance
@@ -265,6 +266,8 @@ export class CanvasdownVisitor extends BaseCstVisitor {
     // Extract label-related fields from edgeData
     let startLabel: string | undefined;
     let endLabel: string | undefined;
+    let markerEnd: string | MarkerConfig | undefined;
+    let markerStart: string | MarkerConfig | undefined;
 
     if (edgeData) {
       // If label is in edgeData but not in colon syntax, use it
@@ -287,6 +290,19 @@ export class CanvasdownVisitor extends BaseCstVisitor {
         edgeData = rest;
       }
 
+      // Extract markerEnd and markerStart from edgeData
+      if (edgeData.markerEnd) {
+        markerEnd = edgeData.markerEnd as string | MarkerConfig;
+        const { markerEnd: _markerEnd, ...rest } = edgeData;
+        edgeData = rest;
+      }
+
+      if (edgeData.markerStart) {
+        markerStart = edgeData.markerStart as string | MarkerConfig;
+        const { markerStart: _markerStart, ...rest } = edgeData;
+        edgeData = rest;
+      }
+
       // Also remove label from edgeData if it was extracted
       if (edgeData.label && typeof edgeData.label === 'string') {
         const { label: _label, ...rest } = edgeData;
@@ -300,6 +316,8 @@ export class CanvasdownVisitor extends BaseCstVisitor {
       ...(label && { label }),
       ...(startLabel && { startLabel }),
       ...(endLabel && { endLabel }),
+      ...(markerEnd && { markerEnd }),
+      ...(markerStart && { markerStart }),
       ...(edgeType && { edgeType }),
       ...(edgeData && Object.keys(edgeData).length > 0 && { edgeData }),
     };

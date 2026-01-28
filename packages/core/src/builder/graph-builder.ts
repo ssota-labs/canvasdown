@@ -8,6 +8,7 @@ import type {
   CustomPropertyValue,
 } from '../types/custom-property.types';
 import { CustomPropertyType } from '../types/custom-property.types';
+import type { MarkerConfig } from '../types/edge-type.types';
 import type { GraphEdge, GraphNode } from '../types/graph.types';
 
 /**
@@ -191,6 +192,8 @@ export class GraphBuilder {
       'default';
     let style: { stroke: string; strokeWidth: number } | undefined;
     let defaultData: Record<string, unknown> = {};
+    let markerEnd: string | MarkerConfig | undefined;
+    let markerStart: string | MarkerConfig | undefined;
 
     // If edge type is specified, get defaults from registry
     if (astEdge.edgeType) {
@@ -208,7 +211,27 @@ export class GraphBuilder {
 
       shape = typeDef.defaultShape;
       style = typeDef.defaultStyle;
-      defaultData = typeDef.defaultData || {};
+      defaultData = { ...(typeDef.defaultData || {}) };
+
+      // Extract markers from defaultData if present
+      if (defaultData.markerEnd !== undefined) {
+        markerEnd = defaultData.markerEnd as string | MarkerConfig;
+        const { markerEnd: _markerEnd, ...rest } = defaultData;
+        defaultData = rest;
+      }
+      if (defaultData.markerStart !== undefined) {
+        markerStart = defaultData.markerStart as string | MarkerConfig;
+        const { markerStart: _markerStart, ...rest } = defaultData;
+        defaultData = rest;
+      }
+    }
+
+    // DSL에서 지정한 마커가 있으면 우선 (병합)
+    if (astEdge.markerEnd !== undefined) {
+      markerEnd = astEdge.markerEnd;
+    }
+    if (astEdge.markerStart !== undefined) {
+      markerStart = astEdge.markerStart;
     }
 
     // Merge default edge data with DSL edge data
@@ -217,6 +240,18 @@ export class GraphBuilder {
       astEdge.edgeData || {}
     );
 
+    // Extract markers from mergedData if present (DSL에서 지정한 경우)
+    if (mergedData.markerEnd !== undefined) {
+      markerEnd = mergedData.markerEnd as string | MarkerConfig;
+      const { markerEnd: _markerEnd, ...rest } = mergedData;
+      Object.assign(mergedData, rest);
+    }
+    if (mergedData.markerStart !== undefined) {
+      markerStart = mergedData.markerStart as string | MarkerConfig;
+      const { markerStart: _markerStart, ...rest } = mergedData;
+      Object.assign(mergedData, rest);
+    }
+
     return {
       id: edgeId,
       source: astEdge.source,
@@ -224,6 +259,8 @@ export class GraphBuilder {
       ...(astEdge.label && { label: astEdge.label }),
       ...(astEdge.startLabel && { startLabel: astEdge.startLabel }),
       ...(astEdge.endLabel && { endLabel: astEdge.endLabel }),
+      ...(markerEnd && { markerEnd }),
+      ...(markerStart && { markerStart }),
       shape,
       ...(style && { style }),
       data: mergedData,

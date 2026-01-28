@@ -205,6 +205,45 @@ main_thesis -> claim2 : "supports"
 claim1 -> ev1 : "based on"
 `,
   },
+  {
+    id: 'edge-markers',
+    name: 'Edge Markers',
+    description: 'Example with edge markers (arrows) using property schema',
+    category: 'advanced',
+    dsl: `canvas LR
+
+@shape start "Start" {
+  shapeType: ellipse,
+  color: green
+}
+
+@shape step1 "Step 1" {
+  shapeType: rectangle,
+  color: blue
+}
+
+@shape step2 "Step 2" {
+  shapeType: rectangle,
+  color: purple
+}
+
+@shape end "End" {
+  shapeType: ellipse,
+  color: red
+}
+
+start -> step1 {
+  markerEnd: "arrowclosed"
+}
+
+step1 -> step2 {
+  markerStart: "arrow",
+  markerEnd: "arrowclosed"
+}
+
+step2 -> end : "completes"
+`,
+  },
 ];
 
 export function getExampleById(id: string): Example | undefined {

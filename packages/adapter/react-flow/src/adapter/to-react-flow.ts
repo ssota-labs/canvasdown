@@ -75,21 +75,33 @@ export function toReactFlowEdges(
   direction: 'LR' | 'RL' | 'TB' | 'BT' = 'LR'
 ): Edge[] {
   const handles = handleMap[direction];
-  return graphEdges.map(edge => ({
-    id: edge.id,
-    source: edge.source,
-    target: edge.target,
-    sourceHandle: handles.sourceHandle,
-    targetHandle: handles.targetHandle,
-    label: edge.label,
-    type: 'default',
-    style: edge.style,
-    data: {
-      ...edge.data,
-      startLabel: edge.startLabel,
-      endLabel: edge.endLabel,
-    },
-  }));
+  return graphEdges.map(edge => {
+    const reactFlowEdge: Edge = {
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      sourceHandle: handles.sourceHandle,
+      targetHandle: handles.targetHandle,
+      label: edge.label,
+      type: 'default',
+      style: edge.style,
+      data: {
+        ...edge.data,
+        startLabel: edge.startLabel,
+        endLabel: edge.endLabel,
+      },
+    };
+
+    // Add markers if they exist (React Flow accepts string or EdgeMarker)
+    if (edge.markerEnd !== undefined) {
+      reactFlowEdge.markerEnd = edge.markerEnd as any;
+    }
+    if (edge.markerStart !== undefined) {
+      reactFlowEdge.markerStart = edge.markerStart as any;
+    }
+
+    return reactFlowEdge;
+  });
 }
 
 /**

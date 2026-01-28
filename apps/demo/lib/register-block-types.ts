@@ -167,5 +167,17 @@ export function registerBlockTypes(core: InstanceType<typeof CanvasdownCore>) {
       stroke: '#b1b1b7',
       strokeWidth: 2,
     },
+    edgePropertySchema: {
+      markerEnd: {
+        type: 'enum',
+        enum: ['arrow', 'arrowclosed'],
+        description: 'Marker at the end of the edge (target side)',
+      },
+      markerStart: {
+        type: 'enum',
+        enum: ['arrow', 'arrowclosed'],
+        description: 'Marker at the start of the edge (source side)',
+      },
+    },
   });
 }

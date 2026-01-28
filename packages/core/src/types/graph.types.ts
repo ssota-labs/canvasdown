@@ -3,6 +3,8 @@
  * These represent the final graph structure with positions calculated by the layout engine.
  */
 
+import type { MarkerConfig } from './edge-type.types';
+
 /**
  * A node in the graph with calculated position
  */
@@ -56,6 +58,12 @@ export interface GraphEdge<TEdgeData = Record<string, unknown>> {
     stroke: string;
     strokeWidth: number;
   };
+
+  /** Optional marker at the end of the edge (target side) */
+  markerEnd?: string | MarkerConfig;
+
+  /** Optional marker at the start of the edge (source side) */
+  markerStart?: string | MarkerConfig;
 
   /** Edge data (merged defaultData + DSL edgeData) */
   data: TEdgeData;
