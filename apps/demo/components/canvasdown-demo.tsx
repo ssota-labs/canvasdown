@@ -7,7 +7,7 @@ import {
   type CanvasdownOutput,
 } from '@ssota-labs/canvasdown';
 import {
-  useCanvasdown,
+  parseCanvasdown,
   useCanvasdownPatch,
 } from '@ssota-labs/canvasdown-reactflow';
 import type { Edge, Node } from '@xyflow/react';
@@ -40,23 +40,25 @@ export function CanvasdownDemo({ dsl, onDslChange }: CanvasdownDemoProps) {
   // Initialize core and register block types
   const core = useMemo(() => {
     const options: CanvasdownCoreOptions = {
-      defaultExtent: 'parent', // Constrain zone children to parent bounds by default
+      // defaultExtent: 'parent', // Constrain zone children to parent bounds by default
     };
     const c = new CanvasdownCore(options);
     registerBlockTypes(c);
     return c;
   }, []);
 
-  // Parse and layout DSL using useCanvasdown hook with nodeTypes for type safety
+  // Parse and layout DSL using parseCanvasdown function with nodeTypes for type safety
   // nodeTypes를 전달하면 nodes의 type 필드가 'shape' | 'markdown' | 'image' | 'youtube' | 'zone'으로 제한됨
   const {
     nodes,
     edges,
     error: parseError,
-  } = useCanvasdown(dsl, {
-    core,
-    nodeTypes: CANVAS_NODE_TYPES, // 타입 안정성을 위한 nodeTypes 전달
-  });
+  } = useMemo(() => {
+    return parseCanvasdown(dsl, {
+      core,
+      nodeTypes: CANVAS_NODE_TYPES, // 타입 안정성을 위한 nodeTypes 전달
+    });
+  }, [dsl, core]);
 
   // Get raw result for data viewer
   const rawResult = useMemo(() => {

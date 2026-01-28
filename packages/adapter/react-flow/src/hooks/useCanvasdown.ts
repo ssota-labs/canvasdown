@@ -1,19 +1,13 @@
 import { useMemo } from 'react';
-import type { CanvasdownCore } from '@ssota-labs/canvasdown';
 import type { Edge, Node, NodeTypes } from '@xyflow/react';
-import { toReactFlowEdges, toReactFlowNodes } from '../adapter/to-react-flow';
+import {
+  parseCanvasdown,
+  type ParseCanvasdownOptions,
+} from '../parseCanvasdown';
 import type { ExtractNodeType } from '../types';
 
-export interface UseCanvasdownOptions<
-  TNodeTypes extends NodeTypes = NodeTypes
-> {
-  /** Canvasdown core instance */
-  core: CanvasdownCore;
-  /** Layout direction */
-  direction?: 'LR' | 'RL' | 'TB' | 'BT';
-  /** React Flow node types for type safety */
-  nodeTypes?: TNodeTypes;
-}
+export type UseCanvasdownOptions<TNodeTypes extends NodeTypes = NodeTypes> =
+  ParseCanvasdownOptions<TNodeTypes>;
 
 export interface UseCanvasdownReturn<TNodeTypes extends NodeTypes = NodeTypes> {
   /** React Flow nodes */
@@ -47,22 +41,7 @@ export function useCanvasdown<TNodeTypes extends NodeTypes = NodeTypes>(
   options: UseCanvasdownOptions<TNodeTypes>
 ): UseCanvasdownReturn<TNodeTypes> {
   const { nodes, edges, error } = useMemo(() => {
-    try {
-      const result = options.core.parseAndLayout(dsl);
-      const direction = options.direction || result.metadata.direction || 'LR';
-      return {
-        nodes: toReactFlowNodes<TNodeTypes>(result.nodes),
-        edges: toReactFlowEdges(result.edges, direction),
-        error: null,
-      };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      return {
-        nodes: [],
-        edges: [],
-        error: errorMessage,
-      };
-    }
+    return parseCanvasdown(dsl, options);
   }, [dsl, options.core, options.direction]);
 
   return {

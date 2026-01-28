@@ -42,16 +42,125 @@ export function toReactFlowNodes<TNodeTypes extends NodeTypes = NodeTypes>(
       reactFlowNode.parentId = node.parentId;
       // Use extent from data if provided
       // If extent is not set in data, leave it undefined (no constraint)
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7246/ingest/cd0008d3-9a3e-45ef-93d5-cb4299cc3388',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'to-react-flow.ts:41',
+            message: 'Converting node with parentId',
+            data: {
+              nodeId: node.id,
+              parentId: node.parentId,
+              position: node.position,
+              dataExtent: (node.data as any)?.extent,
+              dataKeys: Object.keys(node.data),
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'A',
+          }),
+        }
+      ).catch(() => {});
+      // #endregion
       const extent = (
         node.data as {
           extent?: 'parent' | [[number, number], [number, number]] | null;
         }
       )?.extent;
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7246/ingest/cd0008d3-9a3e-45ef-93d5-cb4299cc3388',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'to-react-flow.ts:50',
+            message: 'Extent value extracted',
+            data: {
+              nodeId: node.id,
+              extent,
+              extentType: typeof extent,
+              isUndefined: extent === undefined,
+              isNull: extent === null,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'A',
+          }),
+        }
+      ).catch(() => {});
+      // #endregion
       if (extent !== undefined && extent !== null) {
         reactFlowNode.extent = extent;
+        // #region agent log
+        fetch(
+          'http://127.0.0.1:7246/ingest/cd0008d3-9a3e-45ef-93d5-cb4299cc3388',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'to-react-flow.ts:52',
+              message: 'Extent set on React Flow node',
+              data: { nodeId: node.id, extent: reactFlowNode.extent },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'A',
+            }),
+          }
+        ).catch(() => {});
+        // #endregion
+      } else {
+        // #region agent log
+        fetch(
+          'http://127.0.0.1:7246/ingest/cd0008d3-9a3e-45ef-93d5-cb4299cc3388',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'to-react-flow.ts:55',
+              message: 'Extent NOT set on React Flow node',
+              data: {
+                nodeId: node.id,
+                extent,
+                hasParentId: !!reactFlowNode.parentId,
+              },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'B',
+            }),
+          }
+        ).catch(() => {});
+        // #endregion
       }
       // If extent is undefined/null, React Flow will not constrain the node
     }
+    // #region agent log
+    fetch('http://127.0.0.1:7246/ingest/cd0008d3-9a3e-45ef-93d5-cb4299cc3388', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'to-react-flow.ts:31',
+        message: 'Final React Flow node',
+        data: {
+          nodeId: reactFlowNode.id,
+          parentId: reactFlowNode.parentId,
+          extent: reactFlowNode.extent,
+          position: reactFlowNode.position,
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'C',
+      }),
+    }).catch(() => {});
+    // #endregion
 
     return reactFlowNode;
   });
