@@ -7,13 +7,14 @@ import {
   type CanvasdownOutput,
 } from '@ssota-labs/canvasdown';
 import {
-  toReactFlowEdges,
-  toReactFlowNodes,
+  useCanvasdown,
   useCanvasdownPatch,
 } from '@ssota-labs/canvasdown-reactflow';
+import type { Edge, Node } from '@xyflow/react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Example } from '@/lib/examples';
+import { CANVAS_NODE_TYPES } from '@/lib/node-types';
 import { registerBlockTypes } from '@/lib/register-block-types';
 import { APIDSLWriter } from './api-dsl-writer';
 import { CanvasPreview } from './canvas-preview';
@@ -46,26 +47,23 @@ export function CanvasdownDemo({ dsl, onDslChange }: CanvasdownDemoProps) {
     return c;
   }, []);
 
-  // Parse and layout DSL - keep this pure, no side effects
-  const { nodes, edges, parseError, rawResult } = useMemo(() => {
-    try {
-      const result = core.parseAndLayout(dsl);
-      const reactFlowNodes = toReactFlowNodes(result.nodes);
+  // Parse and layout DSL using useCanvasdown hook with nodeTypes for type safety
+  // nodeTypes를 전달하면 nodes의 type 필드가 'shape' | 'markdown' | 'image' | 'youtube' | 'zone'으로 제한됨
+  const {
+    nodes,
+    edges,
+    error: parseError,
+  } = useCanvasdown(dsl, {
+    core,
+    nodeTypes: CANVAS_NODE_TYPES, // 타입 안정성을 위한 nodeTypes 전달
+  });
 
-      return {
-        nodes: reactFlowNodes,
-        edges: toReactFlowEdges(result.edges, result.metadata.direction),
-        parseError: null,
-        rawResult: result,
-      };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      return {
-        nodes: [],
-        edges: [],
-        parseError: errorMessage,
-        rawResult: null,
-      };
+  // Get raw result for data viewer
+  const rawResult = useMemo(() => {
+    try {
+      return core.parseAndLayout(dsl);
+    } catch {
+      return null;
     }
   }, [dsl, core]);
 
@@ -107,8 +105,8 @@ interface CanvasdownDemoInnerProps {
   setMode: (mode: EditorMode) => void;
   dsl: string;
   onDslChange: (dsl: string) => void;
-  initialNodes: ReturnType<typeof toReactFlowNodes>;
-  initialEdges: ReturnType<typeof toReactFlowEdges>;
+  initialNodes: Node[];
+  initialEdges: Edge[];
   parseError: string | null;
   patchError: string | null;
   setPatchError: (error: string | null) => void;

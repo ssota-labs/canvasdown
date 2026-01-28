@@ -23,4 +23,4 @@ export {
 export { applyPatch, type ApplyPatchOptions } from './patch/index';
 
 // Types
-export type { Direction } from './types';
+export type { Direction, ExtractNodeType, NodeTypes } from './types';

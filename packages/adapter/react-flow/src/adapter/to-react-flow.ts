@@ -1,12 +1,31 @@
 import type { GraphEdge, GraphNode } from '@ssota-labs/canvasdown';
-import type { Edge, Node } from '@xyflow/react';
+import type { Edge, Node, NodeTypes } from '@xyflow/react';
+import type { ExtractNodeType } from '../types';
 
 /**
  * Convert Canvasdown GraphNode to React Flow Node
+ *
+ * @template TNodeTypes - NodeTypes object for type safety
+ *
+ * @example
+ * ```typescript
+ * const nodeTypes = {
+ *   shape: ShapeBlock,
+ *   markdown: MarkdownBlock,
+ * } as const;
+ *
+ * const nodes = toReactFlowNodes<typeof nodeTypes>(graphNodes);
+ * // nodes의 type 필드가 'shape' | 'markdown'으로 제한됨
+ * ```
  */
-export function toReactFlowNodes(graphNodes: GraphNode[]): Node[] {
+export function toReactFlowNodes<TNodeTypes extends NodeTypes = NodeTypes>(
+  graphNodes: GraphNode[]
+): Node<Record<string, unknown>, ExtractNodeType<TNodeTypes>>[] {
   return graphNodes.map(node => {
-    const reactFlowNode: Node = {
+    const reactFlowNode: Node<
+      Record<string, unknown>,
+      ExtractNodeType<TNodeTypes>
+    > = {
       id: node.id,
       type: node.type,
       position: node.position,
@@ -76,13 +95,16 @@ export function toReactFlowEdges(
 /**
  * Convert Canvasdown output to React Flow graph
  */
-export function toReactFlowGraph(
+export function toReactFlowGraph<TNodeTypes extends NodeTypes = NodeTypes>(
   nodes: GraphNode[],
   edges: GraphEdge[],
   direction: 'LR' | 'RL' | 'TB' | 'BT' = 'LR'
-): { nodes: Node[]; edges: Edge[] } {
+): {
+  nodes: Node<Record<string, unknown>, ExtractNodeType<TNodeTypes>>[];
+  edges: Edge[];
+} {
   return {
-    nodes: toReactFlowNodes(nodes),
+    nodes: toReactFlowNodes<TNodeTypes>(nodes),
     edges: toReactFlowEdges(edges, direction),
   };
 }
