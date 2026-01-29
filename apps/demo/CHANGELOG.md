@@ -1,5 +1,12 @@
 # demo
 
+## 0.3.8
+
+### Patch Changes
+
+- Updated dependencies [31b4d0e]
+  - @ssota-labs/canvasdown-reactflow@0.8.0
+
 ## 0.3.7
 
 ### Patch Changes
