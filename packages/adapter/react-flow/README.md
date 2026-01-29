@@ -17,6 +17,7 @@ npm install @ssota-labs/canvasdown-reactflow @ssota-labs/canvasdown @xyflow/reac
 ```
 
 **Peer Dependencies:**
+
 - `react` ^19.0.0
 - `react-dom` ^19.0.0
 - `@xyflow/react` ^12.8.2
@@ -24,11 +25,11 @@ npm install @ssota-labs/canvasdown-reactflow @ssota-labs/canvasdown @xyflow/reac
 ## Quick Start
 
 ```tsx
+import { CanvasdownCore } from '@ssota-labs/canvasdown';
 import { useCanvasdown } from '@ssota-labs/canvasdown-reactflow';
 import { ReactFlow } from '@xyflow/react';
-import { CanvasdownCore } from '@ssota-labs/canvasdown';
-import { ShapeBlock } from './components/ShapeBlock';
 import { MarkdownBlock } from './components/MarkdownBlock';
+import { ShapeBlock } from './components/ShapeBlock';
 import { ZoneBlock } from './components/ZoneBlock';
 
 // 1. Set up core with block types
@@ -46,10 +47,10 @@ core.registerBlockType({
 core.registerBlockType({
   name: 'zone',
   isGroup: true, // Mark as group node
-  defaultProperties: { 
+  defaultProperties: {
     direction: 'TB',
     color: 'gray',
-    padding: 20 
+    padding: 20,
   },
   defaultSize: { width: 400, height: 300 },
 });
@@ -100,12 +101,7 @@ function MyCanvas() {
   }
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      fitView
-    >
+    <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView>
       <Background />
       <Controls />
     </ReactFlow>
@@ -115,6 +111,7 @@ function MyCanvas() {
 
 ## Features
 
+- **`parseCanvasdown` Function** — Synchronous DSL parsing without React hooks
 - **`useCanvasdown` Hook** — Parse DSL and get React Flow nodes/edges
 - **NodeTypes generic** — Type-safe node types: pass `nodeTypes` to constrain `nodes[].type` to your registered keys
 - **`useCanvasdownPatch` Hook** — Incrementally update canvas with Patch DSL
@@ -123,6 +120,58 @@ function MyCanvas() {
 - **State Management** — `CanvasStateManager` for advanced use cases
 - **Type Safety** — Full TypeScript support
 - **Zone/Group Support** — Automatic conversion of zones to React Flow group nodes with `parentId` and `extent`
+
+## Functions
+
+### `parseCanvasdown`
+
+Parse DSL synchronously and convert to React Flow nodes/edges without React hooks. Useful when you need direct control over parsing or when working outside React components.
+
+```tsx
+import { useMemo } from 'react';
+import { parseCanvasdown } from '@ssota-labs/canvasdown-reactflow';
+
+function MyCanvas() {
+  const dsl = `
+    canvas LR
+    @shape start "Start" { color: green }
+    @shape end "End" { color: red }
+    start -> end
+  `;
+
+  const { nodes, edges, error } = useMemo(() => {
+    return parseCanvasdown(dsl, {
+      core: canvasdownCore,
+      direction: 'LR', // Optional: override DSL direction
+      nodeTypes: nodeTypes, // Optional: for type safety
+    });
+  }, [dsl, core]);
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  return <ReactFlow nodes={nodes} edges={edges} />;
+}
+```
+
+**Options:**
+
+- `core: CanvasdownCore` — Core instance with registered types
+- `direction?: 'LR' | 'RL' | 'TB' | 'BT'` — Override layout direction
+- `nodeTypes?: TNodeTypes` — Optional. Pass your React Flow `nodeTypes` object for type safety
+
+**Returns:**
+
+- `nodes: Node[]` — React Flow nodes
+- `edges: Edge[]` — React Flow edges (include `sourceHandle` / `targetHandle` from layout direction)
+- `error: string | null` — Parsing error message if any
+
+**When to use `parseCanvasdown` vs `useCanvasdown`:**
+
+- Use `parseCanvasdown` when you need synchronous parsing without React render cycle dependencies
+- Use `parseCanvasdown` when working outside React components or in event handlers
+- Use `useCanvasdown` when you want automatic memoization based on dependencies
 
 ## Hooks
 
@@ -144,11 +193,13 @@ function MyCanvas() {
 ```
 
 **Options:**
+
 - `core: CanvasdownCore` — Core instance with registered types
 - `direction?: 'LR' | 'RL' | 'TB' | 'BT'` — Override layout direction
 - `nodeTypes?: TNodeTypes` — Optional. Pass your React Flow `nodeTypes` object for type safety (see below)
 
 **Returns:**
+
 - `nodes: Node[]` — React Flow nodes
 - `edges: Edge[]` — React Flow edges (include `sourceHandle` / `targetHandle` from layout direction)
 - `error: string | null` — Parsing error message if any
@@ -170,7 +221,7 @@ const { nodes, edges } = useCanvasdown(dsl, {
 });
 
 // TypeScript knows the exact node type keys
-<ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} />
+<ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} />;
 ```
 
 ### `useCanvasdownPatch`
@@ -209,10 +260,12 @@ function MyCanvas() {
 ```
 
 **Options:**
+
 - `core: CanvasdownCore` — Core instance with registered types
 - `direction?: 'LR' | 'RL' | 'TB' | 'BT'` — Override layout direction
 
 **Returns:**
+
 - `nodes: Node[]` — React Flow nodes
 - `edges: Edge[]` — React Flow edges
 - `applyPatch: (patchDsl: string) => void` — Apply patch DSL
@@ -231,14 +284,11 @@ const edgeTypes = {
   default: CustomEdge,
 };
 
-<ReactFlow
-  nodes={nodes}
-  edges={edges}
-  edgeTypes={edgeTypes}
-/>
+<ReactFlow nodes={nodes} edges={edges} edgeTypes={edgeTypes} />;
 ```
 
 The `CustomEdge` component automatically handles:
+
 - Edge labels (center, start, end)
 - **Edge markers** — Renders SVG markers for `markerEnd` / `markerStart` when set (e.g. `arrowclosed`, `arrow`)
 - Custom edge styles
@@ -251,8 +301,11 @@ The `CustomEdge` component automatically handles:
 For more control over canvas state:
 
 ```tsx
-import { CanvasStateManager, toReactFlowGraph } from '@ssota-labs/canvasdown-reactflow';
 import { CanvasdownCore } from '@ssota-labs/canvasdown';
+import {
+  CanvasStateManager,
+  toReactFlowGraph,
+} from '@ssota-labs/canvasdown-reactflow';
 
 const core = new CanvasdownCore();
 // ... register types
@@ -275,8 +328,11 @@ const { nodes: newNodes, edges: newEdges } = toReactFlowGraph(patchResult);
 Convert Canvasdown graph data to React Flow format:
 
 ```tsx
-import { toReactFlowNodes, toReactFlowEdges } from '@ssota-labs/canvasdown-reactflow';
 import { CanvasdownCore } from '@ssota-labs/canvasdown';
+import {
+  toReactFlowEdges,
+  toReactFlowNodes,
+} from '@ssota-labs/canvasdown-reactflow';
 
 const core = new CanvasdownCore();
 const result = core.parseAndLayout(dsl);
@@ -304,7 +360,7 @@ import { NodeProps } from '@xyflow/react';
 
 function KanbanCard({ data }: NodeProps) {
   const { status, assignee, priority } = data;
-  
+
   return (
     <Card className={`status-${status} priority-${priority}`}>
       <h3>{data.label}</h3>
@@ -325,12 +381,11 @@ const nodeTypes = {
 Zones are automatically converted to React Flow group nodes. Create a group node component:
 
 ```tsx
-import { NodeProps } from '@xyflow/react';
-import { Handle, Position } from '@xyflow/react';
+import { Handle, NodeProps, Position } from '@xyflow/react';
 
 function ZoneBlock({ data, selected }: NodeProps) {
   const { label, color, padding } = data;
-  
+
   return (
     <div
       style={{
@@ -342,9 +397,7 @@ function ZoneBlock({ data, selected }: NodeProps) {
         minHeight: '100px',
       }}
     >
-      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-        {label}
-      </div>
+      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>{label}</div>
       {/* Children will be rendered inside this group */}
     </div>
   );
@@ -364,6 +417,7 @@ const nodeTypes = {
 ```
 
 **Zone Features:**
+
 - Children automatically get `parentId` set to the zone's ID
 - `extent` property controls whether children are constrained within zone boundaries
 - Set `defaultExtent: 'parent'` in `CanvasdownCore` constructor to constrain all zone children
@@ -389,7 +443,10 @@ Supported Patch DSL commands:
 Full TypeScript support with type inference:
 
 ```tsx
-import type { UseCanvasdownOptions, UseCanvasdownReturn } from '@ssota-labs/canvasdown-reactflow';
+import type {
+  UseCanvasdownOptions,
+  UseCanvasdownReturn,
+} from '@ssota-labs/canvasdown-reactflow';
 
 const options: UseCanvasdownOptions = {
   core: canvasdownCore,
@@ -443,14 +500,14 @@ function ZoneCanvas() {
   const core = new CanvasdownCore({
     defaultExtent: 'parent', // Constrain zone children
   });
-  
+
   core.registerBlockType({
     name: 'zone',
     isGroup: true,
     defaultProperties: { direction: 'TB', color: 'gray', padding: 20 },
     defaultSize: { width: 400, height: 300 },
   });
-  
+
   const dsl = `
     canvas TB
     
@@ -476,19 +533,14 @@ function ZoneCanvas() {
   `;
 
   const { nodes, edges } = useCanvasdown(dsl, { core });
-  
+
   const nodeTypes = {
     shape: ShapeBlock,
     zone: ZoneBlock,
   };
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      fitView
-    />
+    <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView />
   );
 }
 ```
@@ -514,7 +566,7 @@ function InteractiveCanvas() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodeClick={(e) => updateNode(e.node.id, 'red')}
+        onNodeClick={e => updateNode(e.node.id, 'red')}
       />
     </>
   );
@@ -575,9 +627,13 @@ a -> b { markerStart: "arrow", markerEnd: "arrowclosed" }
 
 ## API Reference
 
+### `parseCanvasdown(dsl: string, options: ParseCanvasdownOptions)`
+
+Synchronously parse DSL and return React Flow nodes/edges. Does not depend on React render cycles.
+
 ### `useCanvasdown(dsl: string, options: UseCanvasdownOptions)`
 
-Parse DSL and return React Flow nodes/edges.
+Parse DSL and return React Flow nodes/edges. Internally uses `parseCanvasdown` with `useMemo` for automatic memoization.
 
 ### `useCanvasdownPatch(initialDsl: string, options: UseCanvasdownPatchOptions)`
 

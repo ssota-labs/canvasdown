@@ -67,5 +67,38 @@ describe('PatchParser', () => {
       const { errors } = parsePatchDSL('@invalid node1');
       expect(errors.length).toBeGreaterThan(0);
     });
+
+    it('should parse @update with UUID as nodeId', () => {
+      const uuid = '550e8400-e29b-41d4-a716-446655440000';
+      const { cst, errors } = parsePatchDSL(
+        `@update ${uuid} { title: "Updated" }`
+      );
+      expect(errors).toHaveLength(0);
+      expect(cst).toBeDefined();
+    });
+
+    it('should parse @delete with UUID as nodeId', () => {
+      const uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      const { cst, errors } = parsePatchDSL(`@delete ${uuid}`);
+      expect(errors).toHaveLength(0);
+      expect(cst).toBeDefined();
+    });
+
+    it('should parse @connect with UUID source and target', () => {
+      const a = '550e8400-e29b-41d4-a716-446655440000';
+      const b = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      const { cst, errors } = parsePatchDSL(`@connect ${a} -> ${b}`);
+      expect(errors).toHaveLength(0);
+      expect(cst).toBeDefined();
+    });
+
+    it('should parse @add with UUID as nodeId', () => {
+      const uuid = 'deadbeef-e29b-41d4-a716-446655440000';
+      const { cst, errors } = parsePatchDSL(
+        `@add [markdown:${uuid}] "New Node"`
+      );
+      expect(errors).toHaveLength(0);
+      expect(cst).toBeDefined();
+    });
   });
 });

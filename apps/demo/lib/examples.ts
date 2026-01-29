@@ -244,6 +244,32 @@ step1 -> step2 {
 step2 -> end : "completes"
 `,
   },
+  {
+    id: 'uuid-ids',
+    name: 'UUID IDs',
+    description:
+      'Nodes use UUID ids (React Flow–style). Use with "Load Example" → "UUID" in Patch to try patching by UUID.',
+    category: 'advanced',
+    dsl: `canvas LR
+
+@shape 550e8400-e29b-41d4-a716-446655440000 "Start" {
+  shapeType: ellipse,
+  color: green
+}
+
+@markdown a1b2c3d4-e5f6-7890-abcd-ef1234567890 "Process" {
+  content: "# Hello"
+}
+
+@shape deadbeef-e29b-41d4-a716-446655440000 "End" {
+  shapeType: ellipse,
+  color: red
+}
+
+550e8400-e29b-41d4-a716-446655440000 -> a1b2c3d4-e5f6-7890-abcd-ef1234567890 : "begins"
+a1b2c3d4-e5f6-7890-abcd-ef1234567890 -> deadbeef-e29b-41d4-a716-446655440000 : "completes"
+`,
+  },
 ];
 
 export function getExampleById(id: string): Example | undefined {
@@ -255,3 +281,37 @@ export function getExamplesByCategory(
 ): Example[] {
   return EXAMPLES.filter(ex => ex.category === category);
 }
+
+// Patch examples for Patch Editor. UUID set matches "UUID IDs" canvas example.
+export interface PatchExample {
+  id: string;
+  name: string;
+  description: string;
+  patchDsl: string;
+}
+
+export const PATCH_EXAMPLES: PatchExample[] = [
+  {
+    id: 'patch-basic',
+    name: 'Basic',
+    description:
+      'start, process, newNode (use with Basic Flow / Custom Properties)',
+    patchDsl: `@update start { color: blue }
+@update process { content: "# Updated Content" }
+@add [shape:newNode] "New Node" { color: purple }
+@connect process -> newNode : "connects to"
+@move newNode { x: 300, y: 200 }
+`,
+  },
+  {
+    id: 'patch-uuid',
+    name: 'UUID',
+    description: 'UUID node ids (use with "UUID IDs" example)',
+    patchDsl: `@update 550e8400-e29b-41d4-a716-446655440000 { color: blue }
+@update a1b2c3d4-e5f6-7890-abcd-ef1234567890 { content: "# Updated" }
+@add [shape:cafebabe-e29b-41d4-a716-446655440000] "New Node" { color: purple }
+@connect a1b2c3d4-e5f6-7890-abcd-ef1234567890 -> cafebabe-e29b-41d4-a716-446655440000 : "connects"
+@move cafebabe-e29b-41d4-a716-446655440000 { x: 300, y: 200 }
+`,
+  },
+];
