@@ -47,6 +47,19 @@ start -> end
     expect(cst).toBeDefined();
   });
 
+  it('should parse block and edge definitions with UUID ids', () => {
+    const { cst, errors } = parseDSL(`
+canvas LR
+
+@shape 550e8400-e29b-41d4-a716-446655440000 "Start" { color: green }
+@shape a1b2c3d4-e5f6-7890-abcd-ef1234567890 "End" { color: red }
+550e8400-e29b-41d4-a716-446655440000 -> a1b2c3d4-e5f6-7890-abcd-ef1234567890 : "go"
+`);
+
+    expect(errors).toHaveLength(0);
+    expect(cst).toBeDefined();
+  });
+
   it('should parse edge with label', () => {
     const { cst, errors } = parseDSL(`
 canvas LR

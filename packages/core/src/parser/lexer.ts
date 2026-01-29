@@ -75,14 +75,14 @@ export const AtSign = createToken({
   pattern: /@/,
 });
 
-export const Arrow = createToken({
-  name: 'Arrow',
-  pattern: /->/,
-});
-
 export const DollarSign = createToken({
   name: 'DollarSign',
   pattern: /\$/,
+});
+
+export const Arrow = createToken({
+  name: 'Arrow',
+  pattern: /->/,
 });
 
 export const Colon = createToken({
@@ -141,10 +141,13 @@ export const BooleanLiteral = createToken({
   pattern: /true|false/,
 });
 
-// Identifiers (must come after keywords)
+// Identifiers (must come after keywords).
+// Accepts: UUID, then classic. Classic allows hyphens only between segments (e.g. thesis-ddd) so "->" stays Arrow.
+// UUID must come first so letter‑leading UUIDs match fully. Identifier before Arrow/NumberLiteral for correct tokenization.
 export const Identifier = createToken({
   name: 'Identifier',
-  pattern: /[a-zA-Z_][a-zA-Z0-9_]*/,
+  pattern:
+    /(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})|(?:[a-zA-Z_][a-zA-Z0-9_]*(?:-[a-zA-Z0-9_]+)*)/,
 });
 
 // Whitespace (skipped)
@@ -180,6 +183,8 @@ export const allTokens = [
   AtEnd, // Must come before AtSign
   AtSign,
   DollarSign,
+  Identifier, // Before Arrow so UUIDs (with '-') match as Identifier, not cause Arrow to fail
+  NumberLiteral,
   Arrow,
   Colon,
   LBrace,
@@ -190,9 +195,7 @@ export const allTokens = [
   RBracket,
   Comma,
   StringLiteral,
-  NumberLiteral,
   BooleanLiteral,
-  Identifier,
 ];
 
 /**

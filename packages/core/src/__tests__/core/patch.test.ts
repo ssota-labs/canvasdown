@@ -29,6 +29,14 @@ describe('CanvasdownCore - Patch', () => {
         core.parsePatch('@invalid node1');
       }).toThrow();
     });
+
+    it('should parse patch DSL with UUID nodeIds', () => {
+      const uuid = '550e8400-e29b-41d4-a716-446655440000';
+      const operations = core.parsePatch(`@update ${uuid} { title: "New" }`);
+      expect(operations).toHaveLength(1);
+      expect(operations[0]!.type).toBe('update');
+      expect((operations[0] as { targetId: string }).targetId).toBe(uuid);
+    });
   });
 
   describe('validatePatch', () => {
@@ -84,6 +92,13 @@ describe('CanvasdownCore - Patch', () => {
       );
       const result = core.validatePatch(operations, ['node1']);
       expect(result.valid).toBe(false);
+    });
+
+    it('should validate update operation with UUID nodeId', () => {
+      const uuid = '550e8400-e29b-41d4-a716-446655440000';
+      const operations = core.parsePatch(`@update ${uuid} { title: "New" }`);
+      const result = core.validatePatch(operations, [uuid]);
+      expect(result.valid).toBe(true);
     });
   });
 });

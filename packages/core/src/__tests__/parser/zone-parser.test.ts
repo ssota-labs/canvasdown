@@ -22,6 +22,30 @@ describe('Zone Parser', () => {
     expect(ast.nodes.find(n => n.id === 'main_claim')?.parentId).toBe('thesis');
   });
 
+  it('should parse zone with hyphenated id (e.g. thesis-ddd)', () => {
+    const { cst, errors } = parseDSL(`canvas TB
+@zone thesis-ddd "Core Thesis" {
+  direction: TB,
+  color: blue
+}
+  @shape main_thesis "Video's Main Argument" {
+    shapeType: ellipse,
+    color: blue
+  }
+@end
+`);
+
+    expect(errors).toHaveLength(0);
+    expect(cst).toBeDefined();
+    const ast = cstToAST(cst);
+    const zone = ast.nodes.find(n => n.id === 'thesis-ddd');
+    expect(zone).toBeDefined();
+    expect(zone?.type).toBe('zone');
+    expect(ast.nodes.find(n => n.id === 'main_thesis')?.parentId).toBe(
+      'thesis-ddd'
+    );
+  });
+
   it('should parse zone without label', () => {
     const { cst, errors } = parseDSL(`
 canvas TB
