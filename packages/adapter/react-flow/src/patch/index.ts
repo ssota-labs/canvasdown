@@ -1,1 +1,5 @@
-export { applyPatch, type ApplyPatchOptions } from './patch-applier';
+export {
+  applyPatch,
+  type ApplyPatchOptions,
+  type TransformUpdateNode,
+} from './patch-applier';

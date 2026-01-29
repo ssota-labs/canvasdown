@@ -155,9 +155,19 @@ export class GraphBuilder {
       }
     }
 
-    // Build final data object
+    // Build final data object.
+    // Expose @shape id "..." quoted string as data.label and data.title (title from body overrides).
+    const titleFromBody = mergedProperties.title;
+    const effectiveTitle =
+      titleFromBody !== undefined &&
+      titleFromBody !== null &&
+      titleFromBody !== ''
+        ? titleFromBody
+        : astNode.label;
     const data: Record<string, unknown> = {
       ...mergedProperties,
+      label: astNode.label,
+      title: effectiveTitle,
       ...(customProperties.length > 0 && { customProperties }),
     };
 
