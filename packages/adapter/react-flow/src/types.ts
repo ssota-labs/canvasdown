@@ -30,6 +30,7 @@ export type {
   UseCanvasdownReturn,
 } from './hooks/useCanvasdown';
 export type {
+  PatchAppliedResult,
   UseCanvasdownPatchOptions,
   UseCanvasdownPatchReturn,
 } from './hooks/useCanvasdownPatch';

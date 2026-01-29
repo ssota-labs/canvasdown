@@ -4,7 +4,10 @@ import type { AddOperation } from '@ssota-labs/canvasdown';
 import { act, renderHook } from '@testing-library/react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useCanvasdownPatch } from '../../hooks/useCanvasdownPatch';
+import {
+  useCanvasdownPatch,
+  type PatchAppliedResult,
+} from '../../hooks/useCanvasdownPatch';
 
 // Wrapper component for ReactFlowProvider
 const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -108,5 +111,85 @@ describe('useCanvasdownPatch', () => {
     );
 
     expect(result.current.applyPatch).toBeDefined();
+  });
+
+  it('should call onPatchApplied after applyPatch(dsl) success', () => {
+    const onPatchApplied = vi.fn<(result: PatchAppliedResult) => void>();
+
+    const { result } = renderHook(
+      () => useCanvasdownPatch(core, { onPatchApplied }),
+      { wrapper }
+    );
+
+    const patchDsl = '@add [shape:node1] "Node 1"';
+
+    act(() => {
+      result.current.applyPatch(patchDsl);
+    });
+
+    expect(onPatchApplied).toHaveBeenCalledTimes(1);
+    const arg = onPatchApplied.mock.calls[0][0] as {
+      operations: unknown[];
+      nodes: unknown[];
+      edges: unknown[];
+      patchDsl?: string;
+    };
+    expect(arg.operations).toHaveLength(1);
+    expect(arg.operations[0]).toMatchObject({ type: 'add', targetId: 'node1' });
+    expect(arg.nodes).toHaveLength(1);
+    expect(arg.edges).toEqual([]);
+    expect(arg.patchDsl).toBe(patchDsl);
+  });
+
+  it('should call onPatchApplied after applyPatchOperations(ops) success with patchDsl undefined', () => {
+    const onPatchApplied = vi.fn<(result: PatchAppliedResult) => void>();
+
+    const { result } = renderHook(
+      () => useCanvasdownPatch(core, { onPatchApplied }),
+      { wrapper }
+    );
+
+    const operation: AddOperation = {
+      type: 'add',
+      targetId: 'node1',
+      nodeType: 'shape',
+      label: 'Node 1',
+    };
+
+    act(() => {
+      result.current.applyPatchOperations([operation]);
+    });
+
+    expect(onPatchApplied).toHaveBeenCalledTimes(1);
+    const arg = onPatchApplied.mock.calls[0][0] as {
+      operations: unknown[];
+      patchDsl?: string;
+    };
+    expect(arg.operations).toHaveLength(1);
+    expect(arg.patchDsl).toBeUndefined();
+  });
+
+  it('should call onPatchError when patch validation fails', () => {
+    const onPatchError = vi.fn<(error: unknown) => void>();
+
+    const { result } = renderHook(
+      () => useCanvasdownPatch(core, { onPatchError }),
+      { wrapper }
+    );
+
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    act(() => {
+      expect(() => {
+        result.current.applyPatch('@invalid operation');
+      }).toThrow();
+    });
+
+    expect(onPatchError).toHaveBeenCalledTimes(1);
+    expect(onPatchError.mock.calls[0][0]).toBeInstanceOf(Error);
+
+    consoleErrorSpy.mockRestore();
   });
 });

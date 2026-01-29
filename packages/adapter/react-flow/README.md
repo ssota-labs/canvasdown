@@ -500,6 +500,39 @@ const { applyPatch } = useCanvasdownPatch(core, {
 - **Without** `transformUpdateNode`: the adapter merges into `node.data` only (default).
 - **With** `transformUpdateNode`: you control the whole update (e.g. `data.properties`, markdown → TipTap in your app).
 
+### Patch applied callback (server sync)
+
+After a patch is successfully applied (React Flow state updated), you can run side effects (e.g. sync to server) via `onPatchApplied`. The callback receives the applied operations and the new nodes/edges so you don't need to re-parse the patch string.
+
+```tsx
+import type { UpdateOperation } from '@ssota-labs/canvasdown';
+import type { PatchAppliedResult } from '@ssota-labs/canvasdown-reactflow';
+
+const { applyPatch } = useCanvasdownPatch(core, {
+  transformUpdateNode,
+  onPatchApplied(result: PatchAppliedResult) {
+    const updates = result.operations.filter(
+      (op): op is UpdateOperation => op.type === 'update'
+    );
+    for (const u of updates) {
+      const blockMountId = nodeIdMapRef.current.get(u.targetId);
+      if (blockMountId != null && u.properties?.content != null)
+        updateBlockContentByMountId(
+          blockMountId,
+          markdownToTiptap(u.properties.content),
+          u.properties.content
+        );
+    }
+  },
+  onPatchError(err) {
+    toast.error('Patch failed');
+  },
+});
+```
+
+- **onPatchApplied**: Called once after `setNodes`/`setEdges`. Receives `{ operations, nodes, edges, patchDsl? }`. `patchDsl` is set only when applied via `applyPatch(dsl)`; it is `undefined` when applied via `applyPatchOperations(ops)`. Async callbacks are fire-and-forget; rejections are logged.
+- **onPatchError**: Called when validation or apply fails. Use for toasts or alerts.
+
 ## TypeScript
 
 Full TypeScript support with type inference:
