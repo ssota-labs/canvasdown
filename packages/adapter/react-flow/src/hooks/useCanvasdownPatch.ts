@@ -5,12 +5,25 @@ import type {
   PatchOperationUnion,
 } from '@ssota-labs/canvasdown';
 import { useReactFlow } from '@xyflow/react';
+import type { Edge, Node } from '@xyflow/react';
 import { CanvasStateManager } from '../adapter/state-manager';
 import {
   applyPatch,
   type ApplyPatchOptions,
   type TransformUpdateNode,
 } from '../patch/patch-applier';
+
+/** Result passed to onPatchApplied after a patch is successfully applied */
+export interface PatchAppliedResult {
+  /** Operations that were just applied */
+  operations: PatchOperationUnion[];
+  /** Nodes after applying the patch */
+  nodes: Node[];
+  /** Edges after applying the patch */
+  edges: Edge[];
+  /** Present only when applied via applyPatch(dsl); undefined when via applyPatchOperations(ops) */
+  patchDsl?: string;
+}
 
 export interface UseCanvasdownPatchOptions {
   /** Preserve node positions when applying patches */
@@ -22,6 +35,14 @@ export interface UseCanvasdownPatchOptions {
    * transform content from markdown to TipTap JSON).
    */
   transformUpdateNode?: TransformUpdateNode;
+  /**
+   * Called after a patch is successfully applied (setNodes/setEdges done).
+   * Use for server sync (e.g. filter update ops and call updateBlockContentByMountId).
+   * Async callbacks are fire-and-forget; rejections are logged.
+   */
+  onPatchApplied?: (result: PatchAppliedResult) => void | Promise<void>;
+  /** Called when validation or apply fails. Use for toasts/alerts. */
+  onPatchError?: (error: unknown) => void;
 }
 
 export interface UseCanvasdownPatchReturn {
@@ -87,7 +108,21 @@ export function useCanvasdownPatch(
         // Update React Flow state
         setNodes(nodes);
         setEdges(edges);
+
+        // Notify success (fire-and-forget for async)
+        const result: PatchAppliedResult = {
+          operations,
+          nodes,
+          edges,
+          patchDsl,
+        };
+        if (options.onPatchApplied) {
+          Promise.resolve(options.onPatchApplied(result)).catch(err =>
+            console.error('[useCanvasdownPatch] onPatchApplied error:', err)
+          );
+        }
       } catch (error: unknown) {
+        options.onPatchError?.(error);
         console.error('Failed to apply patch:', error);
         throw error;
       }
@@ -134,7 +169,20 @@ export function useCanvasdownPatch(
         // Update React Flow state
         setNodes(nodes);
         setEdges(edges);
+
+        // Notify success (fire-and-forget for async)
+        const result: PatchAppliedResult = {
+          operations,
+          nodes,
+          edges,
+        };
+        if (options.onPatchApplied) {
+          Promise.resolve(options.onPatchApplied(result)).catch(err =>
+            console.error('[useCanvasdownPatch] onPatchApplied error:', err)
+          );
+        }
       } catch (error: unknown) {
+        options.onPatchError?.(error);
         console.error('Failed to apply patch operations:', error);
         throw error;
       }

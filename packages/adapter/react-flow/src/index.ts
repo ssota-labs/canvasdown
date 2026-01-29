@@ -13,6 +13,7 @@ export { CustomEdge } from './components/index';
 export {
   useCanvasdown,
   useCanvasdownPatch,
+  type PatchAppliedResult,
   type UseCanvasdownOptions,
   type UseCanvasdownReturn,
   type UseCanvasdownPatchOptions,
