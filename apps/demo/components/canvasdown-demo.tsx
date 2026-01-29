@@ -5,6 +5,7 @@ import {
   CanvasdownCore,
   type CanvasdownCoreOptions,
   type CanvasdownOutput,
+  type UpdateOperation,
 } from '@ssota-labs/canvasdown';
 import {
   parseCanvasdown,
@@ -16,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Example } from '@/lib/examples';
 import { CANVAS_NODE_TYPES } from '@/lib/node-types';
 import { registerBlockTypes } from '@/lib/register-block-types';
+import { markdownToTipTapJson } from '@/lib/tiptap-transform';
 import { APIDSLWriter } from './api-dsl-writer';
 import { CanvasPreview } from './canvas-preview';
 import { DataViewer } from './data-viewer';
@@ -135,9 +137,46 @@ function CanvasdownDemoInner({
   currentExampleId,
   onAPIDSLGenerated,
 }: CanvasdownDemoInnerProps) {
+  const transformUpdateNode = useMemo(() => {
+    return (node: Node, operation: UpdateOperation) => {
+      const nextData = { ...node.data };
+      if (operation.properties) {
+        const { content, ...rest } = operation.properties;
+        Object.assign(nextData, rest);
+        if (content != null && typeof content === 'string') {
+          // Patch DSL strings may have literal \n (backslash+n); normalize so markdown renders correctly
+          const normalizedContent = content.replace(/\\n/g, '\n');
+          nextData.content = normalizedContent;
+          try {
+            nextData.contentJson = markdownToTipTapJson(normalizedContent);
+          } catch {
+            nextData.contentJson = undefined;
+          }
+        }
+      }
+      if (operation.customProperties?.length) {
+        const arr = [
+          ...((nextData.customProperties as Array<{
+            schemaId: string;
+            value: unknown;
+          }>) ?? []),
+        ];
+        for (const { key, value } of operation.customProperties) {
+          const i = arr.findIndex(c => c.schemaId === key);
+          const entry = { schemaId: key, value };
+          if (i >= 0) arr[i] = entry;
+          else arr.push(entry);
+        }
+        nextData.customProperties = arr;
+      }
+      return { ...node, data: nextData };
+    };
+  }, []);
+
   const { applyPatch } = useCanvasdownPatch(core, {
     preservePositions: true,
     direction: 'LR',
+    transformUpdateNode,
   });
 
   const handlePatchApply = (patchDsl: string) => {

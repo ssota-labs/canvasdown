@@ -438,6 +438,68 @@ Supported Patch DSL commands:
 @resize id { width: 300, height: 200 }  // Resize block
 ```
 
+### Customizing @update (data.properties, content → TipTap)
+
+By default, `@update` merges patch properties into `node.data` directly. If your nodes store props under `data.properties` (e.g. `color`, `shape`) or need `content` (markdown string) converted to TipTap JSON, use `transformUpdateNode`:
+
+```tsx
+import type {
+  TransformUpdateNode,
+  UpdateOperation,
+} from '@ssota-labs/canvasdown-reactflow';
+// TipTap: use your markdown → JSON helper (e.g. @tiptap/core, or a custom parser)
+import { generateJSON } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+import type { Node } from '@xyflow/react';
+
+const markdownToTipTapJson = (markdown: string) =>
+  generateJSON(markdown, [StarterKit]);
+
+const transformUpdateNode: TransformUpdateNode = (node, operation) => {
+  const nextData = { ...node.data };
+
+  // 1. Put shape/color etc. under data.properties
+  if (operation.properties) {
+    const { content, ...rest } = operation.properties;
+    nextData.properties = {
+      ...(nextData.properties as Record<string, unknown>),
+      ...rest,
+    };
+    // 2. Convert content (markdown) to TipTap JSON
+    if (content != null && typeof content === 'string') {
+      nextData.content = markdownToTipTapJson(content);
+    }
+  }
+
+  if (operation.customProperties?.length) {
+    nextData.customProperties = [...(nextData.customProperties ?? [])];
+    for (const { key, value } of operation.customProperties) {
+      const arr = nextData.customProperties as Array<{
+        schemaId: string;
+        value: unknown;
+      }>;
+      const i = arr.findIndex(c => c.schemaId === key);
+      const entry = { schemaId: key, value };
+      if (i >= 0) arr[i] = entry;
+      else arr.push(entry);
+    }
+  }
+
+  return { ...node, data: nextData };
+};
+
+// Usage with useCanvasdownPatch
+const { applyPatch } = useCanvasdownPatch(core, {
+  preservePositions: true,
+  transformUpdateNode,
+});
+// Then applyPatch('@update node1 { color: blue, content: "# Hello" }') will
+// set data.properties.color and data.content (TipTap JSON).
+```
+
+- **Without** `transformUpdateNode`: the adapter merges into `node.data` only (default).
+- **With** `transformUpdateNode`: you control the whole update (e.g. `data.properties`, markdown → TipTap in your app).
+
 ## TypeScript
 
 Full TypeScript support with type inference:

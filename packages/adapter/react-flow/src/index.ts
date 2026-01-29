@@ -27,7 +27,11 @@ export {
 } from './parseCanvasdown';
 
 // Patch
-export { applyPatch, type ApplyPatchOptions } from './patch/index';
+export {
+  applyPatch,
+  type ApplyPatchOptions,
+  type TransformUpdateNode,
+} from './patch/index';
 
 // Types
 export type { Direction, ExtractNodeType, NodeTypes } from './types';

@@ -13,6 +13,17 @@ import type { Edge, Node } from '@xyflow/react';
 import { CanvasStateManager } from '../adapter/state-manager';
 
 /**
+ * Customize how @update is applied to a node.
+ * Use this when your node stores props in `data.properties` or when you need
+ * to transform values (e.g. markdown string → TipTap JSON).
+ * If provided, the adapter uses the returned node instead of merging into `node.data` directly.
+ */
+export type TransformUpdateNode = (
+  node: Node,
+  operation: UpdateOperation
+) => Node;
+
+/**
  * Options for applying patch operations
  */
 export interface ApplyPatchOptions {
@@ -22,6 +33,12 @@ export interface ApplyPatchOptions {
   core: CanvasdownCore;
   /** Layout direction for new edges */
   direction?: 'LR' | 'RL' | 'TB' | 'BT';
+  /**
+   * Customize how @update is applied. Use for data.properties layout or
+   * transforming content (e.g. markdown → TipTap JSON). When set, default
+   * merge into node.data is skipped for that update.
+   */
+  transformUpdateNode?: TransformUpdateNode;
 }
 
 /**
@@ -93,13 +110,21 @@ function applyUpdateOperation(
   operation: UpdateOperation,
   nodes: Node[],
   stateManager: CanvasStateManager,
-  _options: ApplyPatchOptions
+  options: ApplyPatchOptions
 ): Node[] {
   const node = stateManager.findNodeById(nodes, operation.targetId);
   if (!node) {
     throw new Error(`Node "${operation.targetId}" not found for update`);
   }
 
+  const updatedNode = options.transformUpdateNode
+    ? options.transformUpdateNode({ ...node }, operation)
+    : applyDefaultUpdate(node, operation);
+
+  return nodes.map(n => (n.id === operation.targetId ? updatedNode : n));
+}
+
+function applyDefaultUpdate(node: Node, operation: UpdateOperation): Node {
   // Update properties
   if (operation.properties) {
     node.data = {
@@ -109,27 +134,25 @@ function applyUpdateOperation(
   }
 
   // Update custom properties (if supported)
-  // Note: Custom properties are typically stored in node.data
   if (operation.customProperties) {
     for (const customProp of operation.customProperties) {
-      // Store custom property in data
-      // Convert from { key, value } to { schemaId, value } format
       if (!node.data.customProperties) {
         node.data.customProperties = [];
       }
-      const existingIndex = (
-        node.data.customProperties as Array<{
-          schemaId: string;
-          value: unknown;
-        }>
-      ).findIndex(cp => cp.schemaId === customProp.key);
+      const customProps = node.data.customProperties as Array<{
+        schemaId: string;
+        value: unknown;
+      }>;
+      const existingIndex = customProps.findIndex(
+        cp => cp.schemaId === customProp.key
+      );
       if (existingIndex >= 0) {
-        (node.data.customProperties as any[])[existingIndex] = {
+        customProps[existingIndex] = {
           schemaId: customProp.key,
           value: customProp.value,
         };
       } else {
-        (node.data.customProperties as any[]).push({
+        customProps.push({
           schemaId: customProp.key,
           value: customProp.value,
         });
@@ -137,7 +160,7 @@ function applyUpdateOperation(
     }
   }
 
-  return nodes.map(n => (n.id === operation.targetId ? node : n));
+  return node;
 }
 
 /**

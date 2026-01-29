@@ -35,4 +35,7 @@ export type {
 } from './hooks/useCanvasdownPatch';
 
 // Re-export patch types
-export type { ApplyPatchOptions } from './patch/patch-applier';
+export type {
+  ApplyPatchOptions,
+  TransformUpdateNode,
+} from './patch/patch-applier';

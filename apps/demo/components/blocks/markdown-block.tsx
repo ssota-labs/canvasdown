@@ -1,13 +1,17 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
+import StarterKit from '@tiptap/starter-kit';
+import { renderToReactElement } from '@tiptap/static-renderer/pm/react';
 import { Handle, Position } from '@xyflow/react';
 import type { NodeProps } from '@xyflow/react';
 import { useConnectedHandles } from '@/hooks/use-connected-handles';
+import { markdownToTipTapJson } from '@/lib/tiptap-transform';
 import { cn } from '@/lib/utils';
 
 interface MarkdownBlockData {
   content?: string;
+  contentJson?: { type: 'doc'; content?: Array<Record<string, unknown>> };
   title?: string;
 }
 
@@ -27,6 +31,8 @@ const hiddenHandleStyle = {
   pointerEvents: 'none' as const,
 };
 
+const STARTER_KIT_EXTENSIONS = [StarterKit];
+
 export const MarkdownBlock = memo(function MarkdownBlock({
   id,
   data,
@@ -34,36 +40,22 @@ export const MarkdownBlock = memo(function MarkdownBlock({
 }: NodeProps) {
   const blockData = data as MarkdownBlockData;
   const content = blockData?.content || '';
+  const contentJson = blockData?.contentJson;
   const connected = useConnectedHandles(id);
 
-  // Simple markdown rendering
-  const renderMarkdown = (md: string) => {
-    const lines = md.split('\n');
-    return lines.map((line, i) => {
-      if (line.startsWith('# ')) {
-        return (
-          <h1 key={i} className="text-2xl font-bold my-2">
-            {line.substring(2)}
-          </h1>
-        );
-      }
-      if (line.startsWith('## ')) {
-        return (
-          <h2 key={i} className="text-xl font-bold my-2">
-            {line.substring(3)}
-          </h2>
-        );
-      }
-      if (line.trim() === '') {
-        return <div key={i} className="h-2" />;
-      }
-      return (
-        <p key={i} className="my-1">
-          {line}
-        </p>
-      );
-    });
-  };
+  const rendered = useMemo(() => {
+    if (!content && !contentJson) return null;
+    const doc = contentJson ?? (content ? markdownToTipTapJson(content) : null);
+    if (!doc) return null;
+    try {
+      return renderToReactElement({
+        content: doc,
+        extensions: STARTER_KIT_EXTENSIONS,
+      });
+    } catch {
+      return null;
+    }
+  }, [content, contentJson]);
 
   return (
     <>
@@ -132,8 +124,10 @@ export const MarkdownBlock = memo(function MarkdownBlock({
             : 'border-gray-200 shadow-md'
         )}
       >
-        {content ? (
-          renderMarkdown(content)
+        {rendered !== null ? (
+          <div className="prose prose-sm max-w-none [&_p]:my-1 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-gray-100 [&_code]:text-gray-800 [&_code]:font-mono [&_code]:text-xs">
+            {rendered}
+          </div>
         ) : (
           <p className="text-gray-400">Empty markdown</p>
         )}

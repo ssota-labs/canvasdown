@@ -314,4 +314,13 @@ export const PATCH_EXAMPLES: PatchExample[] = [
 @move cafebabe-e29b-41d4-a716-446655440000 { x: 300, y: 200 }
 `,
   },
+  {
+    id: 'patch-tiptap',
+    name: 'TipTap',
+    description:
+      'Markdown → TipTap JSON via transformUpdateNode (use with Basic Flow)',
+    patchDsl: `@update process { content: "# Updated section\\n\\nThis content is converted to **TipTap** JSON when you apply the patch. Check the **Data** tab to see \`contentJson\`." }
+@update start { color: blue }
+`,
+  },
 ];

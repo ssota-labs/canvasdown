@@ -6,13 +6,22 @@ import type {
 } from '@ssota-labs/canvasdown';
 import { useReactFlow } from '@xyflow/react';
 import { CanvasStateManager } from '../adapter/state-manager';
-import { applyPatch, type ApplyPatchOptions } from '../patch/patch-applier';
+import {
+  applyPatch,
+  type ApplyPatchOptions,
+  type TransformUpdateNode,
+} from '../patch/patch-applier';
 
 export interface UseCanvasdownPatchOptions {
   /** Preserve node positions when applying patches */
   preservePositions?: boolean;
   /** Layout direction for new edges */
   direction?: 'LR' | 'RL' | 'TB' | 'BT';
+  /**
+   * Customize how @update is applied (e.g. merge into data.properties,
+   * transform content from markdown to TipTap JSON).
+   */
+  transformUpdateNode?: TransformUpdateNode;
 }
 
 export interface UseCanvasdownPatchReturn {
@@ -65,6 +74,7 @@ export function useCanvasdownPatch(
           preservePositions: options.preservePositions ?? true,
           core,
           direction: options.direction || 'LR',
+          transformUpdateNode: options.transformUpdateNode,
         };
 
         const { nodes, edges } = applyPatch(
@@ -111,6 +121,7 @@ export function useCanvasdownPatch(
           preservePositions: options.preservePositions ?? true,
           core,
           direction: options.direction || 'LR',
+          transformUpdateNode: options.transformUpdateNode,
         };
 
         const { nodes, edges } = applyPatch(
